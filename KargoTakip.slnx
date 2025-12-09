@@ -1,6 +1,12 @@
 <Solution>
-  <Folder Name="/Core/" />
-  <Folder Name="/Infrastructure/" />
+  <Folder Name="/Core/">
+    <Project Path="KargoTakip.Application/KargoTakip.Application.csproj" Id="7d0886fc-fdb4-402d-ad86-c13d2389d7ac" />
+    <Project Path="KargoTakip.Domain/KargoTakip.Domain.csproj" Id="22017bd4-ea78-4272-a7a8-5aaabd60a938" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="KargoTakip.Infrastructure/KargoTakip.Infrastructure.csproj" Id="1b0ccab1-70d9-4125-8b96-18966e934e98" />
+    <Project Path="KargoTakip.Persistence/KargoTakip.Persistence.csproj" Id="2dd7f4a2-0684-4141-af73-f5336cc123e9" />
+  </Folder>
   <Folder Name="/Presentation/">
     <Project Path="KargoTakip.API/KargoTakip.API.csproj" />
   </Folder>
