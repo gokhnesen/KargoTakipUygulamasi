@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Core/" />
+  <Folder Name="/Infrastructure/" />
+  <Folder Name="/Presentation/">
+    <Project Path="KargoTakip.API/KargoTakip.API.csproj" />
+  </Folder>
+  <Project Path="KargoTakip.AppHost/KargoTakip.AppHost.csproj" />
+  <Project Path="KargoTakip.ServiceDefaults/KargoTakip.ServiceDefaults.csproj" />
+</Solution>
