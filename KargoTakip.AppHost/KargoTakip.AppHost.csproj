@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\KargoTakip.API\KargoTakip.API.csproj" />
+    <ProjectReference Include="..\KargoTakip.Persistence\KargoTakip.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

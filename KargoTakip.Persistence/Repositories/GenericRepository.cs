@@ -23,7 +23,7 @@ namespace KargoTakip.Persistence.Repositories
         }
 
 
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task<bool> DeleteAsync(string id)
         {
             var entity = await _context.Set<T>().FirstOrDefaultAsync(e => e.Id == id);
             entity.IsDeleted = true;
@@ -36,7 +36,7 @@ namespace KargoTakip.Persistence.Repositories
             return await _context.Set<T>().AsNoTracking().ToListAsync();
         }
 
-        public async Task<T> GetByIdAsync(Guid id)
+        public async Task<T> GetByIdAsync(string id)
         {
            return await _context.Set<T>().FirstOrDefaultAsync(e => e.Id == id);
         }

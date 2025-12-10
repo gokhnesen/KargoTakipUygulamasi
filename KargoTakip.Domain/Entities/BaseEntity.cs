@@ -6,7 +6,7 @@ namespace KargoTakip.Domain.Entities
 {
     public class BaseEntity
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedDate { get; set; } = DateTime.UtcNow;
         public bool IsDeleted { get; set; } = false;
