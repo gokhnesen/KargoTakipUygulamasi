@@ -1,7 +1,19 @@
+using KargoTakip.API.Middleware;
 using KargoTakip.Application;
 using KargoTakip.Persistence;
+using Serilog;
 
+
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(new ConfigurationBuilder()
+        .AddJsonFile("appsettings.json")
+        .Build())
+    .Enrich.FromLogContext()
+    .CreateLogger();
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog();
 
 builder.AddServiceDefaults();
 
@@ -15,7 +27,9 @@ builder.Services.AddPersistenceServices(builder.Configuration);
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
+app.UseSerilogRequestLogging();
 
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

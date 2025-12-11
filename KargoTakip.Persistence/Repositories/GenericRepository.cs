@@ -4,6 +4,7 @@ using KargoTakip.Persistence.DatabaseContext;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace KargoTakip.Persistence.Repositories
@@ -39,6 +40,11 @@ namespace KargoTakip.Persistence.Repositories
         public async Task<T> GetByIdAsync(string id)
         {
            return await _context.Set<T>().FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        public async Task<T> GetValueByExpressionAsync(Expression<Func<T, bool>> expression)
+        {
+            return await _context.Set<T>().FirstOrDefaultAsync(expression);
         }
 
         public async Task<T> UpdateAsync(T entity)

@@ -8,11 +8,10 @@ namespace KargoTakip.Domain.Entities
     public class Cargo : BaseEntity
     {
         public string TrackingNumber { get; set; }
-        public string SenderName { get; set; }
-        public string SenderAddress { get; set; }
-        public string ReceiverName { get; set; }
-        public string ReceiverAddress { get; set; }
-
+        public CargoSender Sender { get; set; }
+        public string SenderId { get; set; }
+        public CargoReceiver Receiver { get; set; }
+        public string ReceiverId { get; set; }
         public ICollection<CargoMovement> Movements { get; set; }
 
         public CargoStatus Status { get; set; }

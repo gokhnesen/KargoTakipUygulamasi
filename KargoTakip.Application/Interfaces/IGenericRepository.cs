@@ -13,5 +13,6 @@ namespace KargoTakip.Application.Interfaces
         Task<T> UpdateAsync(T entity);
         Task<bool> DeleteAsync(string id);
 
+        Task<T> GetValueByExpressionAsync(System.Linq.Expressions.Expression<Func<T, bool>> expression);
     }
 }

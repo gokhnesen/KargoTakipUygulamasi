@@ -1,4 +1,6 @@
 ﻿using FluentValidation;
+using KargoTakip.Application.Behaviors;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
 
@@ -11,6 +13,7 @@ namespace KargoTakip.Application
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ApplicationServiceRegistration).Assembly));
             services.AddValidatorsFromAssembly(typeof(ApplicationServiceRegistration).Assembly);
 
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
             return services;
         }
