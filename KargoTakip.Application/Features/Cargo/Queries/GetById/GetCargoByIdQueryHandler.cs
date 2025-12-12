@@ -1,0 +1,55 @@
+using KargoTakip.Application.Exceptions;
+using KargoTakip.Application.Interfaces;
+using MediatR;
+using Microsoft.Extensions.Logging;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace KargoTakip.Application.Features.Cargo.Queries.GetById
+{
+    public class GetCargoByIdQueryHandler : IRequestHandler<GetCargoByIdQuery, GetCargoByIdQueryResponse>
+    {
+        private readonly IGenericRepository<Domain.Entities.Cargo> _cargoRepository;
+        private readonly ILogger<GetCargoByIdQueryHandler> _logger;
+
+        public GetCargoByIdQueryHandler(
+            IGenericRepository<Domain.Entities.Cargo> cargoRepository,
+            ILogger<GetCargoByIdQueryHandler> logger)
+        {
+            _cargoRepository = cargoRepository;
+            _logger = logger;
+        }
+
+        public async Task<GetCargoByIdQueryResponse> Handle(GetCargoByIdQuery request, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Kargo getiriliyor. Id: {CargoId}", request.Id);
+
+            var cargo = await _cargoRepository.GetByIdAsync(request.Id);
+
+            if (cargo == null)
+            {
+                _logger.LogWarning("Kargo bulunamadi. Id: {CargoId}", request.Id);
+                throw new NotFoundException("Cargo", request.Id);
+            }
+
+            _logger.LogInformation("Kargo bulundu. Takip No: {TrackingNumber}", cargo.TrackingNumber);
+
+            return new GetCargoByIdQueryResponse
+            {
+                Id = cargo.Id,
+                TrackingNumber = cargo.TrackingNumber,
+                SenderName = cargo.Sender?.FullName ?? "Bilinmiyor",
+                SenderAddress = cargo.Sender?.FullAddress ?? "Bilinmiyor",
+                SenderPhoneNumber = cargo.Sender?.PhoneNumber ?? "Bilinmiyor",
+                ReceiverName = cargo.Receiver?.Name ?? "Bilinmiyor",
+                ReceiverSurname = cargo.Receiver?.Surname ?? string.Empty,
+                ReceiverAddress = cargo.Receiver?.FullAddress ?? "Bilinmiyor",
+                ReceiverPhoneNumber = cargo.Receiver?.PhoneNumber ?? "Bilinmiyor",
+                ReceiverEmail = cargo.Receiver?.Email ?? "Bilinmiyor",
+                Status = cargo.Status,
+                CreatedDate = cargo.CreatedDate,
+                UpdatedDate = cargo.UpdatedDate
+            };
+        }
+    }
+}

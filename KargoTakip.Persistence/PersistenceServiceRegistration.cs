@@ -1,6 +1,8 @@
 ﻿using KargoTakip.Application.Interfaces;
+using KargoTakip.Application.Interfaces.Cargo;
 using KargoTakip.Persistence.DatabaseContext;
 using KargoTakip.Persistence.Repositories;
+using KargoTakip.Persistence.Repositories.Cargo;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +20,7 @@ namespace KargoTakip.Persistence
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+            services.AddScoped<ICargoRepository, CargoRepository>();
 
             return services;
         }
