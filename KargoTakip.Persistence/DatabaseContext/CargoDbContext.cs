@@ -1,4 +1,6 @@
 ﻿using KargoTakip.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -6,7 +8,7 @@ using System.Text;
 
 namespace KargoTakip.Persistence.DatabaseContext
 {
-    public class CargoDbContext : DbContext
+    public class CargoDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
     {
         public CargoDbContext(DbContextOptions<CargoDbContext> options) : base(options)
         {

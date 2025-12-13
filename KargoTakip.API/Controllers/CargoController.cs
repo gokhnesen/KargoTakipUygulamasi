@@ -2,6 +2,7 @@
 using KargoTakip.Application.Features.Cargo.Queries;
 using KargoTakip.Application.Features.Cargo.Queries.GetAll;
 using KargoTakip.Application.Features.Cargo.Queries.GetById;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,6 +28,7 @@ namespace KargoTakip.API.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAll()
         {
             var query = new GetAllCargosQuery();

@@ -45,6 +45,13 @@ namespace KargoTakip.API.Middleware
                     _logger.LogWarning("Validation hatası: {Errors}", string.Join(", ", validationException.Errors));
                     break;
 
+                case AuthenticationException authenticationException:
+                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    response.Message = authenticationException.Message;
+                    _logger.LogWarning("Authentication hatası: {Message}", authenticationException.Message);
+                    break;
+
                 case NotFoundException notFoundException:
                     context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                     response.StatusCode = (int)HttpStatusCode.NotFound;
