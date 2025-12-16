@@ -26,8 +26,20 @@ namespace KargoTakip.Persistence.Repositories.Cargo
                 .Include(c => c.Receiver)
                 .Include(c => c.Movements)
                 .Where(c => !c.IsDeleted)
+                .OrderByDescending(c => c.CreatedDate)
                 .AsNoTracking()
                 .ToListAsync();
+        }
+
+        public async Task<Domain.Entities.Cargo> GetCargoByIdWithDetailsAsync(string id)
+        {
+            return await _context.Cargos
+                .Include(c => c.Sender)
+                .Include(c => c.Receiver)
+                .Include(c => c.Movements.OrderByDescending(m => m.CreatedDate))
+                .Where(c => c.Id == id && !c.IsDeleted)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
         }
     }
 }

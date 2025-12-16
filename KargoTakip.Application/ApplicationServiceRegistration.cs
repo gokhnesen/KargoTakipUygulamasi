@@ -1,5 +1,7 @@
 ﻿using FluentValidation;
 using KargoTakip.Application.Behaviors;
+using KargoTakip.Application.Interfaces.Cargo;
+using KargoTakip.Application.Interfaces.Notification;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 

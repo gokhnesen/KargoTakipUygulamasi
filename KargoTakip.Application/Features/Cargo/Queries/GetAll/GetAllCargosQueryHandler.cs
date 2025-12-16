@@ -1,6 +1,7 @@
-using KargoTakip.Application.Interfaces;
+﻿using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.Cargo;
 using KargoTakip.Domain.Entities;
+using KargoTakip.Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -25,31 +26,50 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
 
         public async Task<List<GetAllCargosQueryResponse>> Handle(GetAllCargosQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("T�m kargolar listeleniyor.");
+            _logger.LogInformation("Tüm kargolar listeleniyor.");
 
             var cargos = await _cargoRepository.GetAllCargosAsync();
 
+            _logger.LogInformation("Veritabanından {Count} adet kargo getirildi.", cargos?.Count ?? 0);
+
             if (cargos == null || !cargos.Any())
             {
-                _logger.LogWarning("Hi� kargo bulunamad?.");
+                _logger.LogWarning("Hiç kargo bulunamadı.");
                 return new List<GetAllCargosQueryResponse>();
             }
 
             var response = cargos.Select(c => new GetAllCargosQueryResponse
             {
-                Id = c.Id,
                 TrackingNumber = c.TrackingNumber,
                 SenderName = c.Sender?.FullName ?? "Bilinmiyor",
                 SenderAddress = c.Sender?.FullAddress ?? "Bilinmiyor",
-                ReceiverName = c.Receiver != null ? $"{c.Receiver.Name} {c.Receiver.Surname}" : "Bilinmiyor",
+                SenderPhoneNumber = c.Sender?.PhoneNumber ?? "Bilinmiyor",
+                ReceiverName = c.Receiver?.Name ?? "Bilinmiyor",
+                ReceiverSurname = c.Receiver?.Surname ?? string.Empty,
                 ReceiverAddress = c.Receiver?.FullAddress ?? "Bilinmiyor",
+                ReceiverPhoneNumber = c.Receiver?.PhoneNumber ?? "Bilinmiyor",
+                ReceiverEmail = c.Receiver?.Email ?? "Bilinmiyor",
                 Status = c.Status,
-                CreatedDate = c.CreatedDate
+                CreatedDate = c.CreatedDate,
+                UpdatedDate = c.UpdatedDate
             }).ToList();
 
-            _logger.LogInformation("{Count} adet kargo listelendi.", response.Count);
+            _logger.LogInformation("{Count} adet kargo başarıyla listelendi.", response.Count);
 
             return response;
+        }
+
+        private string GetStatusText(CargoStatus status)
+        {
+            return status switch
+            {
+                CargoStatus.Received => "Teslim Alındı",
+                CargoStatus.InTransit => "Yolda",
+                CargoStatus.OutForDelivery => "Dağıtımda",
+                CargoStatus.Delivered => "Teslim Edildi",
+                CargoStatus.Undelivered => "Teslim Edilemedi",
+                _ => "Bilinmiyor"
+            };
         }
     }
 }

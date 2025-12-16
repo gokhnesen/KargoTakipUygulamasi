@@ -1,5 +1,6 @@
 ﻿using KargoTakip.API.Middleware;
 using KargoTakip.Application;
+using KargoTakip.Infrastructure;
 using KargoTakip.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,6 +58,7 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddApplicationServices();
 builder.Services.AddPersistenceServices(builder.Configuration);
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
 builder.Services.AddAuthentication(options =>
 {

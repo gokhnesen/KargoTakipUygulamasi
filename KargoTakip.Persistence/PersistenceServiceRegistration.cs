@@ -1,14 +1,16 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using KargoTakip.Application.Interfaces;
+﻿using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.Cargo;
+using KargoTakip.Application.Interfaces.CargoMovement;
 using KargoTakip.Domain.Entities;
 using KargoTakip.Persistence.DatabaseContext;
 using KargoTakip.Persistence.Repositories;
 using KargoTakip.Persistence.Repositories.Cargo;
+using KargoTakip.Persistence.Repositories.CargoMovementRepository;
 using KargoTakip.Persistence.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -43,6 +45,8 @@ namespace KargoTakip.Persistence
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<ICargoRepository, CargoRepository>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<ICargoMovementRepository, CargoMovementRepository>();
+
 
             return services;
         }

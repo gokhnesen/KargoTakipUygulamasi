@@ -29,6 +29,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\KargoTakip.Application\KargoTakip.Application.csproj" />
+		<ProjectReference Include="..\KargoTakip.Infrastructure\KargoTakip.Infrastructure.csproj" />
 		<ProjectReference Include="..\KargoTakip.Persistence\KargoTakip.Persistence.csproj" />
 		<ProjectReference Include="..\KargoTakip.ServiceDefaults\KargoTakip.ServiceDefaults.csproj" />
 	</ItemGroup>

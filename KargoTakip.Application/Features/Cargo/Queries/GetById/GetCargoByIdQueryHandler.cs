@@ -1,5 +1,6 @@
 using KargoTakip.Application.Exceptions;
 using KargoTakip.Application.Interfaces;
+using KargoTakip.Application.Interfaces.Cargo;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using System.Threading;
@@ -9,11 +10,11 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetById
 {
     public class GetCargoByIdQueryHandler : IRequestHandler<GetCargoByIdQuery, GetCargoByIdQueryResponse>
     {
-        private readonly IGenericRepository<Domain.Entities.Cargo> _cargoRepository;
+        private readonly ICargoRepository _cargoRepository;
         private readonly ILogger<GetCargoByIdQueryHandler> _logger;
 
         public GetCargoByIdQueryHandler(
-            IGenericRepository<Domain.Entities.Cargo> cargoRepository,
+            ICargoRepository cargoRepository,
             ILogger<GetCargoByIdQueryHandler> logger)
         {
             _cargoRepository = cargoRepository;
@@ -24,7 +25,7 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetById
         {
             _logger.LogInformation("Kargo getiriliyor. Id: {CargoId}", request.Id);
 
-            var cargo = await _cargoRepository.GetByIdAsync(request.Id);
+            var cargo = await _cargoRepository.GetCargoByIdWithDetailsAsync(request.Id);
 
             if (cargo == null)
             {
