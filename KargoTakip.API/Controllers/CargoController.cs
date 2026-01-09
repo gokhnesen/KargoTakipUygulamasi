@@ -39,11 +39,7 @@ namespace KargoTakip.API.Controllers
             return Ok(result);
         }
 
-        /// <summary>
-        /// Kargoya yeni hareket ekler ve alıcıya bildirim gönderir
-        /// </summary>
-        /// <param name="command">Kargo hareket bilgileri</param>
-        /// <returns>Oluşturulan hareket bilgisi</returns>
+
         [HttpPost("movements")]
         [Authorize]
         [ProducesResponseType(typeof(CreateCargoMovementCommandResponse), StatusCodes.Status200OK)]
@@ -55,11 +51,6 @@ namespace KargoTakip.API.Controllers
             return Ok(result);
         }
 
-        /// <summary>
-        /// Belirli bir kargonun tüm hareketlerini getirir
-        /// </summary>
-        /// <param name="cargoId">Kargo ID</param>
-        /// <returns>Kargo hareketleri listesi</returns>
         [HttpGet("{cargoId}/movements")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -70,11 +61,6 @@ namespace KargoTakip.API.Controllers
             return Ok(result);
         }
 
-        /// <summary>
-        /// Takip numarası ile kargo hareketlerini getirir
-        /// </summary>
-        /// <param name="trackingNumber">Takip numarası</param>
-        /// <returns>Kargo hareketleri listesi</returns>
         [HttpGet("track/{trackingNumber}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
