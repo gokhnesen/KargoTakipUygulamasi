@@ -1,0 +1,21 @@
+<div class="container">
+  <header>
+    <h1>Kargo Takip Sistemi</h1>
+    <button class="login-btn" (click)="goToLogin()">Giriş Yap</button>
+  </header>
+
+  <main class="search-section">
+    <div class="search-box">
+      <h2>Kargonuzu Takip Edin</h2>
+      <div class="input-group">
+        <input 
+          type="text" 
+          [(ngModel)]="trackingCode"
+          placeholder="Takip kodunuzu giriniz"
+          (keyup.enter)="searchCargo()"
+        />
+        <button (click)="searchCargo()">Sorgula</button>
+      </div>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,29 @@
+<div class="login-container">
+  <div class="login-box">
+    <h2>Giriş Yap</h2>
+    <form (ngSubmit)="login()">
+      <div class="form-group">
+        <label>E-posta</label>
+        <input 
+          type="email" 
+          [(ngModel)]="email" 
+          name="email"
+          placeholder="ornek@email.com"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label>Şifre</label>
+        <input 
+          type="password" 
+          [(ngModel)]="password"
+          name="password"
+          placeholder="********"
+          required
+        />
+      </div>
+      <button type="submit" class="submit-btn">Giriş Yap</button>
+      <button type="button" class="back-btn" (click)="goBack()">Ana Sayfaya Dön</button>
+    </form>
+  </div>
+</div>

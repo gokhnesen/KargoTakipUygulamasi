@@ -1,0 +1,76 @@
+<div class="tracking-container">
+  <div class="tracking-header">
+    <h1>Kargo Takip</h1>
+    <p>Kargo takip numaranızı girerek gönderinizi takip edebilirsiniz</p>
+  </div>
+
+  <div class="search-section">
+    <div class="search-box">
+      <input 
+        type="text" 
+        [(ngModel)]="trackingNumber" 
+        placeholder="Takip numarasını giriniz"
+        (keyup.enter)="trackCargo($event)"
+        class="tracking-input"
+      />
+      <button 
+        type="button"
+        (click)="trackCargo($event)" 
+        [disabled]="loading"
+        class="track-button"
+      >
+        <span *ngIf="!loading">Sorgula</span>
+        <span *ngIf="loading">Sorgulanıyor...</span>
+      </button>
+    </div>
+    
+    <div *ngIf="error" class="error-message">
+      {{ error }}
+    </div>
+  </div>
+
+  <div *ngIf="cargo" class="cargo-details">
+    <div class="status-banner" [ngClass]="getStatusClass(cargo.status)">
+      <h2>{{ getStatusText(cargo.status) }}</h2>
+      <p class="tracking-number">Takip No: {{ cargo.trackingNumber }}</p>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <h3>Gönderici Bilgileri</h3>
+        <p><strong>Ad Soyad:</strong> {{ cargo.sender.fullName }}</p>
+        <p><strong>Adres:</strong> {{ cargo.sender.fullAddress }}</p>
+        <p><strong>Telefon:</strong> {{ cargo.sender.phoneNumber }}</p>
+      </div>
+
+      <div class="info-card">
+        <h3>Alıcı Bilgileri</h3>
+        <p><strong>Ad Soyad:</strong> {{ cargo.receiver.name }}</p>
+        <p><strong>Adres:</strong> {{ cargo.receiver.fullAddress }}</p>
+        <p><strong>Telefon:</strong> {{ cargo.receiver.phoneNumber }}</p>
+        <p><strong>Email:</strong> {{ cargo.receiver.email }}</p>
+      </div>
+    </div>
+
+    <div class="movements-section">
+      <h3>Kargo Hareketleri</h3>
+      <div class="timeline">
+        <div *ngFor="let movement of movements; let i = index" class="timeline-item">
+          <div class="timeline-marker"></div>
+          <div class="timeline-content">
+            <div class="movement-status" [ngClass]="getStatusClass(movement.newStatus)">
+              {{ getStatusText(movement.newStatus) }}
+            </div>
+            <div class="movement-location">📍 {{ movement.location }}</div>
+            <div class="movement-description">{{ movement.description }}</div>
+            <div class="movement-date">{{ movement.createdDate | date: 'dd.MM.yyyy HH:mm' }}</div>
+          </div>
+        </div>
+        
+        <div *ngIf="movements.length === 0" class="no-movements">
+          Henüz hareket kaydı bulunmamaktadır.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
