@@ -6,11 +6,12 @@ import { Cargo } from '../../shared/Cargo';
 import { CargoMovement } from '../../shared/CargoMovement';
 import { CargoStatus } from '../../shared/CargoStatus';
 import { CargoServices } from '../../core/services/cargoServices.service';
+import { CargoDetailsComponent } from './cargo-details/cargo-details.component';
 
 @Component({
   selector: 'app-cargo-tracking',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CargoDetailsComponent],
   templateUrl: './cargo-tracking.component.html',
   styleUrl: './cargo-tracking.component.scss'
 })
@@ -20,7 +21,7 @@ export class CargoTrackingComponent implements OnInit {
   movements: CargoMovement[] = [];
   loading: boolean = false;
   error: string = '';
-  CargoStatus = CargoStatus;
+  isModalOpen: boolean = false;
 
   constructor(
     private cargoService: CargoServices,
@@ -29,15 +30,13 @@ export class CargoTrackingComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // URL parametrelerini dinle
     this.route.queryParams.subscribe(params => {
-      console.log('1. URL Parametreleri Geldi:', params); // DEBUG
+      console.log('1. URL Parametreleri Geldi:', params);
       const trackingNo = params['tracking'];
       
       if (trackingNo) {
-        console.log('2. Takip Numarası Tespit Edildi:', trackingNo); // DEBUG
+        console.log('2. Takip Numarası Tespit Edildi:', trackingNo);
         this.trackingNumber = trackingNo;
-        // Küçük bir gecikme ile çağırarak input'un dolmasını garantileyelim
         setTimeout(() => {
           this.trackCargo(); 
         }, 100);
@@ -50,44 +49,85 @@ export class CargoTrackingComponent implements OnInit {
       event.preventDefault();
     }
     
-    console.log('3. trackCargo Metodu Çalıştı. No:', this.trackingNumber); // DEBUG
+    console.log('3. trackCargo Metodu Çalıştı. No:', this.trackingNumber);
+    console.log('Event:', event);
 
     if (!this.trackingNumber.trim()) {
       this.error = 'Lütfen takip numarası giriniz.';
+      console.log('Hata: Takip numarası boş');
       return;
     }
 
     this.loading = true;
     this.error = '';
     this.cargo = null;
+    this.isModalOpen = false;
+
+    console.log('API çağrısı yapılıyor...');
 
     this.cargoService.trackCargo(this.trackingNumber).subscribe({
       next: (response) => {
-        console.log('4. API Başarılı Yanıt Döndü:', response); // DEBUG
+        console.log('4. API Başarılı Yanıt Döndü:', response);
         
-        // API yanıtını kontrol et, null geliyorsa hata ver
         if (!response) {
-          this.error = 'API boş yanıt döndü.';
+          this.error = 'Kargo bulunamadı.';
           this.loading = false;
+          console.log('Hata: Response boş');
           return;
         }
 
         this.cargo = {
           trackingNumber: response.trackingNumber,
-          status: response.currentStatus, // Buradaki isimlendirmeye dikkat (API'de 'status' olabilir)
-          sender: response.sender,
-          receiver: response.receiver
+          status: response.currentStatus,
+          currentLocation: response.currentLocation,
+          sender: {
+            fullName: response.sender.fullName,
+            address: response.sender.address,
+            phoneNumber: response.sender.phoneNumber
+          },
+          receiver: {
+            fullName: response.receiver.fullName,
+            address: response.receiver.address,
+            phoneNumber: response.receiver.phoneNumber,
+            email: response.receiver.email
+          }
         } as Cargo;
         
-        this.movements = response.movements || [];
+        this.movements = (response.movements || []).map((m: any) => ({
+          status: m.status,
+          statusText: m.statusText,
+          location: m.location,
+          description: m.description,
+          date: m.date
+        }));
+
+        console.log('5. Cargo set:', this.cargo);
+        console.log('6. Movements set:', this.movements);
+
         this.loading = false;
+        
+        console.log('7. isModalOpen değiştiriliyor: false -> true');
+        this.isModalOpen = true;
+        
+        console.log('8. isModalOpen yeni değer:', this.isModalOpen);
+        
+        // Zorla change detection tetikle
+        setTimeout(() => {
+          console.log('9. Timeout sonrası isModalOpen:', this.isModalOpen);
+        }, 100);
       },
       error: (err) => {
-        console.error('5. API Hatası:', err); // DEBUG
-        this.error = 'Kargo bulunamadı veya bir hata oluştu. (Detaylar konsolda)';
+        console.error('API Hatası:', err);
+        this.error = err.status === 404 
+          ? 'Kargo bulunamadı. Lütfen takip numarasını kontrol ediniz.' 
+          : 'Bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.';
         this.loading = false;
       }
     });
+  }
+
+  closeModal(): void {
+    this.isModalOpen = false;
   }
 
   getStatusText(status: CargoStatus): string {

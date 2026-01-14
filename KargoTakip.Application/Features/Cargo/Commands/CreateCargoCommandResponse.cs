@@ -7,6 +7,7 @@ namespace KargoTakip.Application.Features.Cargo.Commands
 {
     public class CreateCargoCommandResponse
     {
+        public string Id { get; set; }
         public string TrackingNumber { get; set; }
         public string SenderName { get; set; }
         public string SenderAddress { get; set; }

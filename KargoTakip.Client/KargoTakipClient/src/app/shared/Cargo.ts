@@ -6,6 +6,7 @@ import { CargoStatus } from "./CargoStatus";
 
 
 export interface Cargo extends BaseEntity {
+currentLocation: any;
   trackingNumber: string;
   sender: CargoSender;
   senderId: string;

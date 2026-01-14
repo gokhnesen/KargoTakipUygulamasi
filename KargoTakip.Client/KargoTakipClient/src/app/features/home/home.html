@@ -13,9 +13,83 @@
           [(ngModel)]="trackingCode"
           placeholder="Takip kodunuzu giriniz"
           (keyup.enter)="searchCargo()"
+          [disabled]="loading"
         />
-        <button (click)="searchCargo()">Sorgula</button>
+        <button (click)="searchCargo()" [disabled]="loading">
+          <span *ngIf="!loading">Sorgula</span>
+          <span *ngIf="loading">Sorgulanıyor...</span>
+        </button>
+      </div>
+      
+      <!-- Hata Mesajı -->
+      <div *ngIf="error" class="error-message">
+        {{ error }}
       </div>
     </div>
   </main>
+</div>
+
+<!-- Modal Overlay + Kargo Kartı -->
+<div class="modal-overlay" *ngIf="showResults" (click)="closeResults()">
+  <div class="cargo-info-card" (click)="$event.stopPropagation()" *ngIf="cargo">
+    <div class="card-header">
+      <div class="header-left">
+        <span class="status-icon">{{ getStatusIcon(cargo.status) }}</span>
+        <div>
+          <h3>Kargo Detayları</h3>
+          <p class="tracking-no">{{ cargo.trackingNumber }}</p>
+        </div>
+      </div>
+      <button class="close-btn" (click)="closeResults()">✕</button>
+    </div>
+
+    <div class="card-body">
+      <!-- Durum Bilgisi -->
+      <div class="status-info">
+        <div class="status-badge">
+          <span class="status-text">{{ getStatusText(cargo.status) }}</span>
+          <span class="location">📍 {{ cargo.currentLocation }}</span>
+        </div>
+      </div>
+
+      <!-- Gönderici ve Alıcı -->
+      <div class="people-info">
+        <div class="info-box">
+          <h4>📤 Gönderici</h4>
+          <p><strong>{{ cargo.sender.fullName }}</strong></p>
+          <p>{{ cargo.sender.address }}</p>
+          <p>📞 {{ cargo.sender.phoneNumber }}</p>
+        </div>
+
+        <div class="info-box">
+          <h4>📥 Alıcı</h4>
+          <p><strong>{{ cargo.receiver.fullName }}</strong></p>
+          <p>{{ cargo.receiver.address }}</p>
+          <p>📞 {{ cargo.receiver.phoneNumber }}</p>
+          <p *ngIf="cargo.receiver.email">✉️ {{ cargo.receiver.email }}</p>
+        </div>
+      </div>
+
+      <!-- Kargo Hareketleri -->
+      <div class="movements-section">
+        <h4>📍 Kargo Hareketleri</h4>
+        <div class="timeline" *ngIf="movements && movements.length > 0">
+          <div class="timeline-item" *ngFor="let movement of movements">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+              <div class="movement-header">
+                <span class="movement-status">{{ movement.statusText || getStatusText(movement.status) }}</span>
+                <span class="movement-date">{{ movement.date | date: 'dd.MM.yyyy HH:mm' }}</span>
+              </div>
+              <p class="movement-location">📍 {{ movement.location }}</p>
+              <p class="movement-desc" *ngIf="movement.description">{{ movement.description }}</p>
+            </div>
+          </div>
+        </div>
+        <p *ngIf="!movements || movements.length === 0" class="no-movements">
+          Henüz hareket kaydı bulunmamaktadır.
+        </p>
+      </div>
+    </div>
+  </div>
 </div>

@@ -94,6 +94,7 @@ namespace KargoTakip.Application.Features.Cargo.Commands
 
             return new CreateCargoCommandResponse
             {
+                Id = createdCargo.Id,
                 TrackingNumber = createdCargo.TrackingNumber,
                 SenderName = createdSender.FullName,
                 SenderAddress = createdSender.FullAddress,

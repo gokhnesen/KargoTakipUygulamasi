@@ -6,6 +6,10 @@ import { CargoTrackingComponent } from './features/cargo-tracking/cargo-tracking
 export const routes: Routes = [
   { path: '', component: Home },
   { path: 'login', component: Login },
-  { path: '**', redirectTo: '' },
-  { path: 'track', component: CargoTrackingComponent }
+  { path: 'track', component: CargoTrackingComponent },
+
+
+
+    { path: '**', redirectTo: '' },
+
 ];

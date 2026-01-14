@@ -40,6 +40,7 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
 
             var response = cargos.Select(c => new GetAllCargosQueryResponse
             {
+                Id = c.Id,
                 TrackingNumber = c.TrackingNumber,
                 SenderName = c.Sender?.FullName ?? "Bilinmiyor",
                 SenderAddress = c.Sender?.FullAddress ?? "Bilinmiyor",
