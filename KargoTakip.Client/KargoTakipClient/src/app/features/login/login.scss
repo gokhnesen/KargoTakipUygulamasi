@@ -40,6 +40,16 @@
   box-sizing: border-box;
 }
 
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-size: 14px;
+}
+
 .submit-btn {
   width: 100%;
   background: #667eea;
@@ -51,9 +61,14 @@
   font-weight: 600;
   font-size: 1rem;
   margin-bottom: 1rem;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 
-.submit-btn:hover {
+.submit-btn:hover:not(:disabled) {
   background: #764ba2;
 }
 
@@ -66,8 +81,13 @@
   border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 
-.back-btn:hover {
+.back-btn:hover:not(:disabled) {
   background: #f0f0f0;
 }

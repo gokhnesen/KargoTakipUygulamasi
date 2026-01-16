@@ -1,0 +1,124 @@
+<div class="management-container">
+  <header class="management-header">
+    <h1>Kargo Yönetim Paneli</h1>
+    <button class="logout-btn" (click)="logout()">Çıkış Yap</button>
+  </header>
+
+  <div class="search-section">
+    <input 
+      type="text" 
+      [(ngModel)]="searchTerm"
+      (input)="searchCargo()"
+      placeholder="Takip numarası, gönderici veya alıcı adı ile ara..."
+      class="search-input"
+    />
+  </div>
+
+  <div *ngIf="loading" class="loading-message">
+    Kargolar yükleniyor...
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <div class="cargo-list" *ngIf="!loading && !error">
+    <div class="cargo-card" *ngFor="let cargo of filteredCargos">
+      <div class="cargo-header">
+        <h3>{{ cargo.trackingNumber }}</h3>
+        <span [class]="'status-badge ' + getStatusClass(cargo.status)">
+          {{ getStatusText(cargo.status) }}
+        </span>
+      </div>
+      
+      <div class="cargo-details">
+        <div class="detail-section">
+          <h4>Gönderici</h4>
+          <p><strong>Ad:</strong> {{ cargo.senderName || 'Bilinmiyor' }}</p>
+          <p><strong>Telefon:</strong> {{ cargo.senderPhoneNumber || 'Bilinmiyor' }}</p>
+          <p><strong>Adres:</strong> {{ cargo.senderAddress || 'Bilinmiyor' }}</p>
+        </div>
+        
+        <div class="detail-section">
+          <h4>Alıcı</h4>
+          <p><strong>Ad:</strong> {{ cargo.receiverName }} {{ cargo.receiverSurname }}</p>
+          <p><strong>Telefon:</strong> {{ cargo.receiverPhoneNumber || 'Bilinmiyor' }}</p>
+          <p><strong>E-posta:</strong> {{ cargo.receiverEmail || 'Bilinmiyor' }}</p>
+          <p><strong>Adres:</strong> {{ cargo.receiverAddress || 'Bilinmiyor' }}</p>
+        </div>
+        
+        <div class="detail-section">
+          <p><strong>Oluşturulma:</strong> {{ cargo.createdDate | date:'dd.MM.yyyy HH:mm' }}</p>
+          <p><strong>Güncellenme:</strong> {{ cargo.updatedDate | date:'dd.MM.yyyy HH:mm' }}</p>
+        </div>
+      </div>
+      
+      <div class="cargo-actions">
+        <button (click)="openUpdateModal(cargo)" class="btn-update">
+          Durumu Güncelle
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="filteredCargos.length === 0" class="no-cargo">
+      <p>Henüz kargo bulunmamaktadır.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Durum Güncelleme Modal -->
+<div class="modal-backdrop" *ngIf="showUpdateModal" (click)="closeUpdateModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Kargo Durumu Güncelle</h2>
+      <button class="close-btn" (click)="closeUpdateModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="cargo-info-section">
+        <p><strong>Takip No:</strong> {{ selectedCargo?.trackingNumber }}</p>
+        <p><strong>Mevcut Durum:</strong> {{ getStatusText(selectedCargo?.status!) }}</p>
+      </div>
+
+      <div class="form-group">
+        <label>Yeni Durum</label>
+        <select [(ngModel)]="newStatus" class="form-control">
+          <option *ngFor="let option of statusOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Konum *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="newLocation" 
+          placeholder="Örn: İstanbul Dağıtım Merkezi"
+          class="form-control"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Açıklama</label>
+        <textarea 
+          [(ngModel)]="newDescription" 
+          placeholder="Detaylı açıklama giriniz..."
+          class="form-control"
+          rows="3"
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeUpdateModal()" [disabled]="updating">
+        İptal
+      </button>
+      <button class="btn-primary" (click)="updateCargoStatus()" [disabled]="updating">
+        <span *ngIf="!updating">Güncelle</span>
+        <span *ngIf="updating">Güncelleniyor...</span>
+      </button>
+    </div>
+  </div>
+</div>

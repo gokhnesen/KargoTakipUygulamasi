@@ -3,6 +3,7 @@ import { Cargo } from '../../shared/Cargo';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CargoMovement } from '../../shared/CargoMovement';
+import { CargoStatus } from '../../shared/CargoStatus';
 
 @Injectable({
   providedIn: 'root',
@@ -25,8 +26,13 @@ export class CargoServices {
     return this.http.get<Cargo[]>(`${this.baseUrl}`);
   }
 
-  createMovement(command: CargoMovement): Observable<any> {
-    return this.http.post(`${this.baseUrl}/movements`, command);
+  createMovement(movement: {
+    cargoId: string;
+    newStatus: CargoStatus;
+    location: string;
+    description: string;
+  }): Observable<CargoMovement> {
+    return this.http.post<CargoMovement>(`${this.baseUrl}/movements`, movement);
   }
 
   getCargoMovements(cargoId: string): Observable<CargoMovement[]> {
