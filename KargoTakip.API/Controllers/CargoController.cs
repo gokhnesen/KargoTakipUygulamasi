@@ -1,8 +1,9 @@
-﻿using KargoTakip.Application.Features.Cargo.Commands;
+﻿using KargoTakip.Application.Features.Cargo.Commands.Create;
 using KargoTakip.Application.Features.Cargo.Queries;
 using KargoTakip.Application.Features.Cargo.Queries.GetAll;
 using KargoTakip.Application.Features.Cargo.Queries.GetById;
-using KargoTakip.Application.Features.CargoMovement.Commands;
+using KargoTakip.Application.Features.CargoMovement.Commands.Create;
+using KargoTakip.Application.Features.CargoMovement.Commands.UpdateCargoMovement;
 using KargoTakip.Application.Features.CargoMovement.Queries.GetCargoMovements;
 using KargoTakip.Application.Features.CargoMovement.Queries.TrackCargo;
 using Microsoft.AspNetCore.Authorization;
@@ -31,7 +32,6 @@ namespace KargoTakip.API.Controllers
         }
 
         [HttpGet]
-        [Authorize]
         public async Task<IActionResult> GetAll()
         {
             var query = new GetAllCargosQuery();
@@ -41,10 +41,6 @@ namespace KargoTakip.API.Controllers
 
 
         [HttpPost("movements")]
-        [Authorize]
-        [ProducesResponseType(typeof(CreateCargoMovementCommandResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateMovement([FromBody] CreateCargoMovementCommand command)
         {
             var result = await Mediator.Send(command);
@@ -62,12 +58,17 @@ namespace KargoTakip.API.Controllers
         }
 
         [HttpGet("track/{trackingNumber}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> TrackCargo(string trackingNumber)
         {
             var query = new TrackCargoQuery { TrackingNumber = trackingNumber };
             var result = await Mediator.Send(query);
+            return Ok(result);
+        }
+
+        [HttpPut("movements/update")]
+        public async Task<IActionResult> UpdateMovement([FromBody] UpdateCargoMovementCommand command)
+        {
+            var result = await Mediator.Send(command);
             return Ok(result);
         }
     }

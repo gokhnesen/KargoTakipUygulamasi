@@ -132,12 +132,10 @@ export class Home {
     this.router.navigate(['/login']);
   }
 
- // ...existing code...
   @HostListener('document:keydown.escape')
   handleEscapeKey() {
     if (this.showResults) {
       this.closeResults();
     }
   }
-// ...existing code...
 }

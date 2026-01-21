@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using KargoTakip.Domain.Enums;
 
-namespace KargoTakip.Application.Features.CargoMovement.Commands
+namespace KargoTakip.Application.Features.CargoMovement.Commands.Create
 {
     public class CreateCargoMovementCommandValidator : AbstractValidator<CreateCargoMovementCommand>
     {

@@ -1,7 +1,7 @@
 using KargoTakip.Domain.Enums;
 using System;
 
-namespace KargoTakip.Application.Features.CargoMovement.Commands
+namespace KargoTakip.Application.Features.CargoMovement.Commands.Create
 {
     public class CreateCargoMovementCommandResponse
     {

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace KargoTakip.Application.Features.Cargo.Commands
+namespace KargoTakip.Application.Features.Cargo.Commands.Create
 {
     public class CreateCargoCommand : IRequest<CreateCargoCommandResponse>
     {

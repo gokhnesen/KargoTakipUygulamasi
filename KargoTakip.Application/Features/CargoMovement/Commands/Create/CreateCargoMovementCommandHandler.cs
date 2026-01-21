@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace KargoTakip.Application.Features.CargoMovement.Commands
+namespace KargoTakip.Application.Features.CargoMovement.Commands.Create
 {
     public class CreateCargoMovementCommandHandler : IRequestHandler<CreateCargoMovementCommand, CreateCargoMovementCommandResponse>
     {

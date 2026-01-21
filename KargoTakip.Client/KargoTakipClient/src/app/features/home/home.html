@@ -21,7 +21,6 @@
         </button>
       </div>
       
-      <!-- Hata Mesajı -->
       <div *ngIf="error" class="error-message">
         {{ error }}
       </div>
@@ -29,7 +28,6 @@
   </main>
 </div>
 
-<!-- Modal Overlay + Kargo Kartı -->
 <div class="modal-overlay" *ngIf="showResults" (click)="closeResults()">
   <div class="cargo-info-card" (click)="$event.stopPropagation()" *ngIf="cargo">
     <div class="card-header">
@@ -56,21 +54,20 @@
       <div class="people-info">
         <div class="info-box">
           <h4>📤 Gönderici</h4>
-          <p><strong>{{ cargo.sender.fullName }}</strong></p>
-          <p>{{ cargo.sender.address }}</p>
-          <p>📞 {{ cargo.sender.phoneNumber }}</p>
+          <p><strong>{{ cargo.sender?.fullName }}</strong></p>
+          <p>{{ cargo.sender?.address }}</p>
+          <p>📞 {{ cargo.sender?.phoneNumber }}</p>
         </div>
 
         <div class="info-box">
           <h4>📥 Alıcı</h4>
-          <p><strong>{{ cargo.receiver.fullName }}</strong></p>
-          <p>{{ cargo.receiver.address }}</p>
-          <p>📞 {{ cargo.receiver.phoneNumber }}</p>
-          <p *ngIf="cargo.receiver.email">✉️ {{ cargo.receiver.email }}</p>
+          <p><strong>{{ cargo.receiver?.fullName }}</strong></p>
+          <p>{{ cargo.receiver?.address }}</p>
+          <p>📞 {{ cargo.receiver?.phoneNumber }}</p>
+          <p *ngIf="cargo.receiver?.email">✉️ {{ cargo.receiver?.email }}</p>
         </div>
       </div>
 
-      <!-- Kargo Hareketleri -->
       <div class="movements-section">
         <h4>📍 Kargo Hareketleri</h4>
         <div class="timeline" *ngIf="movements && movements.length > 0">
