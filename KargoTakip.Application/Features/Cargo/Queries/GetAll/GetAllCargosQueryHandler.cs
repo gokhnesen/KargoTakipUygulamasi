@@ -1,4 +1,5 @@
-﻿using KargoTakip.Application.Interfaces;
+﻿using KargoTakip.Application.Dtos;
+using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.Cargo;
 using KargoTakip.Domain.Entities;
 using KargoTakip.Domain.Enums;
@@ -52,7 +53,15 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
                 ReceiverEmail = c.Receiver?.Email ?? "Bilinmiyor",
                 Status = c.Status,
                 CreatedDate = c.CreatedDate,
-                UpdatedDate = c.UpdatedDate
+                UpdatedDate = c.UpdatedDate,
+                Movements = c.Movements?.OrderByDescending(m => m.CreatedDate).Select(m => new CargoMovementDto
+                {
+                    Id = m.Id,
+                    NewStatus = m.NewStatus,
+                    Location = m.Location,
+                    Description = m.Description,
+                    CreatedDate = m.CreatedDate
+                }).ToList() ?? new List<CargoMovementDto>()
             }).ToList();
 
             _logger.LogInformation("{Count} adet kargo başarıyla listelendi.", response.Count);

@@ -6,12 +6,11 @@ import { Cargo } from '../../shared/Cargo';
 import { CargoMovement } from '../../shared/CargoMovement';
 import { CargoStatus } from '../../shared/CargoStatus';
 import { CargoServices } from '../../core/services/cargoServices.service';
-import { CargoDetailsComponent } from './cargo-details/cargo-details.component';
 
 @Component({
   selector: 'app-cargo-tracking',
   standalone: true,
-  imports: [CommonModule, FormsModule, CargoDetailsComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './cargo-tracking.component.html',
   styleUrl: './cargo-tracking.component.scss'
 })
@@ -21,7 +20,6 @@ export class CargoTrackingComponent implements OnInit {
   movements: CargoMovement[] = [];
   loading: boolean = false;
   error: string = '';
-  isModalOpen: boolean = false;
 
   constructor(
     private cargoService: CargoServices,
@@ -61,7 +59,6 @@ export class CargoTrackingComponent implements OnInit {
     this.loading = true;
     this.error = '';
     this.cargo = null;
-    this.isModalOpen = false;
 
     console.log('API çağrısı yapılıyor...');
 
@@ -106,15 +103,9 @@ export class CargoTrackingComponent implements OnInit {
 
         this.loading = false;
         
-        console.log('7. isModalOpen değiştiriliyor: false -> true');
-        this.isModalOpen = true;
-        
-        console.log('8. isModalOpen yeni değer:', this.isModalOpen);
-        
-        // Zorla change detection tetikle
-        setTimeout(() => {
-          console.log('9. Timeout sonrası isModalOpen:', this.isModalOpen);
-        }, 100);
+        // Kargo detay sayfasına yönlendir
+        console.log('7. Detay sayfasına yönlendiriliyor...');
+        this.router.navigate(['/cargo-tracking', this.trackingNumber]);
       },
       error: (err) => {
         console.error('API Hatası:', err);
@@ -126,32 +117,26 @@ export class CargoTrackingComponent implements OnInit {
     });
   }
 
-  closeModal(): void {
-    this.isModalOpen = false;
-  }
-
   getStatusText(status: CargoStatus): string {
     switch (status) {
-      case CargoStatus.Created: return 'Oluşturuldu';
+      case CargoStatus.Received: return 'Teslim Alındı';
+      case CargoStatus.Processing: return 'İşleniyor';
       case CargoStatus.InTransit: return 'Yolda';
-      case CargoStatus.InWarehouse: return 'Depoda';
       case CargoStatus.OutForDelivery: return 'Dağıtımda';
       case CargoStatus.Delivered: return 'Teslim Edildi';
-      case CargoStatus.Cancelled: return 'İptal Edildi';
-      case CargoStatus.Returned: return 'İade Edildi';
+      case CargoStatus.Undelivered: return 'Teslim Edilemedi';
       default: return 'Bilinmiyor';
     }
   }
 
   getStatusClass(status: CargoStatus): string {
     switch (status) {
-      case CargoStatus.Created: return 'status-created';
+      case CargoStatus.Received: return 'status-received';
+      case CargoStatus.Processing: return 'status-processing';
       case CargoStatus.InTransit: return 'status-transit';
-      case CargoStatus.InWarehouse: return 'status-warehouse';
       case CargoStatus.OutForDelivery: return 'status-delivery';
       case CargoStatus.Delivered: return 'status-delivered';
-      case CargoStatus.Cancelled: return 'status-cancelled';
-      case CargoStatus.Returned: return 'status-returned';
+      case CargoStatus.Undelivered: return 'status-undelivered';
       default: return '';
     }
   }

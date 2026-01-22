@@ -20,7 +20,13 @@
   }
 }
 
-.logout-btn {
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.create-btn {
   background: white;
   color: #667eea;
   border: none;
@@ -29,9 +35,35 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+
+  .icon {
+    font-size: 20px;
+    font-weight: bold;
+  }
 
   &:hover {
-    background: #f0f0f0;
+    background: #f8f9ff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+  }
+}
+
+.logout-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
   }
 }
 
@@ -113,13 +145,40 @@
   font-weight: 600;
 }
 
-.status-created { background: #e3f2fd; color: #1976d2; }
-.status-transit { background: #fff3e0; color: #f57c00; }
-.status-warehouse { background: #f3e5f5; color: #7b1fa2; }
+.status-received { background: #e3f2fd; color: #1976d2; }
+.status-processing { background: #fff3e0; color: #f57c00; }
+.status-transit { background: #f3e5f5; color: #7b1fa2; }
 .status-delivery { background: #e8f5e9; color: #388e3c; }
 .status-delivered { background: #c8e6c9; color: #2e7d32; }
-.status-cancelled { background: #ffcdd2; color: #c62828; }
-.status-returned { background: #fff9c4; color: #f57f17; }
+.status-undelivered { background: #ffcdd2; color: #c62828; }
+
+.cargo-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.btn-update {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
 
 .update-btn {
   background: #667eea;
@@ -333,4 +392,29 @@
   .cargo-details {
     grid-template-columns: 1fr;
   }
+.modal-large {
+  max-width: 800px;
+}
+
+.form-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+
+  h3 {
+    margin: 0 0 20px 0;
+    color: #667eea;
+    font-size: 18px;
+    font-weight: 600;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #667eea;
+  }
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
 }

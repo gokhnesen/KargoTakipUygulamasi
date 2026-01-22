@@ -3,6 +3,8 @@ using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.Cargo;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -49,7 +51,15 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetById
                 ReceiverEmail = cargo.Receiver?.Email ?? "Bilinmiyor",
                 Status = cargo.Status,
                 CreatedDate = cargo.CreatedDate,
-                UpdatedDate = cargo.UpdatedDate
+                UpdatedDate = cargo.UpdatedDate,
+                Movements = cargo.Movements?.OrderByDescending(m => m.CreatedDate).Select(m => new CargoMovementDto
+                {
+                    Id = m.Id,
+                    NewStatus = m.NewStatus,
+                    Location = m.Location,
+                    Description = m.Description,
+                    CreatedDate = m.CreatedDate
+                }).ToList() ?? new List<CargoMovementDto>()
             };
         }
     }

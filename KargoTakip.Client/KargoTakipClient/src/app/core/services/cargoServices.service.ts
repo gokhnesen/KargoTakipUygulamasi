@@ -14,8 +14,8 @@ export class CargoServices {
 
   constructor(private http: HttpClient) {}
 
-  create(command: Cargo): Observable<any> {
-    return this.http.post(`${this.baseUrl}`, command);
+  create(cargo: Partial<Cargo>): Observable<any> {
+    return this.http.post(`${this.baseUrl}`, cargo);
   }
 
   getById(id: string): Observable<Cargo> {
@@ -26,13 +26,12 @@ export class CargoServices {
     return this.http.get<Cargo[]>(`${this.baseUrl}`);
   }
 
-  createMovement(movement: {
-    cargoId: string;
-    newStatus: CargoStatus;
-    location: string;
-    description: string;
-  }): Observable<CargoMovement> {
+  createMovement(movement: Partial<CargoMovement>): Observable<CargoMovement> {
     return this.http.post<CargoMovement>(`${this.baseUrl}/movements`, movement);
+  }
+
+  updateMovement(movement: Partial<CargoMovement>): Observable<CargoMovement> {
+    return this.http.put<CargoMovement>(`${this.baseUrl}/movements/update`, movement);
   }
 
   getCargoMovements(cargoId: string): Observable<CargoMovement[]> {

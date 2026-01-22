@@ -1,7 +1,12 @@
 <div class="management-container">
   <header class="management-header">
     <h1>Kargo Yönetim Paneli</h1>
-    <button class="logout-btn" (click)="logout()">Çıkış Yap</button>
+    <div class="header-actions">
+      <button class="create-btn" (click)="openCreateModal()">
+        <span class="icon">+</span> Yeni Kargo
+      </button>
+      <button class="logout-btn" (click)="logout()">Çıkış Yap</button>
+    </div>
   </header>
 
   <div class="search-section">
@@ -75,6 +80,16 @@
     </div>
 
     <div class="modal-body">
+      <!-- Başarı Mesajı -->
+      <div *ngIf="successMessage" class="success-alert">
+        ✓ {{ successMessage }}
+      </div>
+
+      <!-- Hata Mesajı -->
+      <div *ngIf="validationError" class="error-alert">
+        ⚠ {{ validationError }}
+      </div>
+
       <div class="cargo-info-section">
         <p><strong>Takip No:</strong> {{ selectedCargo?.trackingNumber }}</p>
         <p><strong>Mevcut Durum:</strong> {{ getStatusText(selectedCargo?.status!) }}</p>
@@ -101,12 +116,13 @@
       </div>
 
       <div class="form-group">
-        <label>Açıklama</label>
+        <label>Açıklama *</label>
         <textarea 
           [(ngModel)]="newDescription" 
           placeholder="Detaylı açıklama giriniz..."
           class="form-control"
           rows="3"
+          required
         ></textarea>
       </div>
     </div>
@@ -118,6 +134,140 @@
       <button class="btn-primary" (click)="updateCargoStatus()" [disabled]="updating">
         <span *ngIf="!updating">Güncelle</span>
         <span *ngIf="updating">Güncelleniyor...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Kargo Oluşturma Modal -->
+<div class="modal-backdrop" *ngIf="showCreateModal" (click)="closeCreateModal()">
+  <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Yeni Kargo Oluştur</h2>
+      <button class="close-btn" (click)="closeCreateModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Başarı Mesajı -->
+      <div *ngIf="successMessage" class="success-alert">
+        ✓ {{ successMessage }}
+      </div>
+
+      <!-- Hata Mesajı -->
+      <div *ngIf="validationError" class="error-alert">
+        ⚠ {{ validationError }}
+      </div>
+
+      <!-- Gönderici Bilgileri -->
+      <div class="form-section">
+        <h3>Gönderici Bilgileri</h3>
+        
+        <div class="form-group">
+          <label>Ad Soyad *</label>
+          <input 
+            type="text" 
+            [(ngModel)]="createForm.senderName" 
+            placeholder="Örn: Ahmet Yılmaz"
+            class="form-control"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Adres *</label>
+          <textarea 
+            [(ngModel)]="createForm.senderAddress" 
+            placeholder="Tam adres bilgisi..."
+            class="form-control"
+            rows="2"
+            required
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Telefon *</label>
+          <input 
+            type="tel" 
+            [(ngModel)]="createForm.senderPhoneNumber" 
+            placeholder="Örn: 0555 123 45 67"
+            class="form-control"
+            required
+          />
+        </div>
+      </div>
+
+      <!-- Alıcı Bilgileri -->
+      <div class="form-section">
+        <h3>Alıcı Bilgileri</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Ad *</label>
+            <input 
+              type="text" 
+              [(ngModel)]="createForm.receiverName" 
+              placeholder="Örn: Mehmet"
+              class="form-control"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Soyad *</label>
+            <input 
+              type="text" 
+              [(ngModel)]="createForm.receiverSurname" 
+              placeholder="Örn: Demir"
+              class="form-control"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Adres *</label>
+          <textarea 
+            [(ngModel)]="createForm.receiverAddress" 
+            placeholder="Tam adres bilgisi..."
+            class="form-control"
+            rows="2"
+            required
+          ></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Telefon *</label>
+            <input 
+              type="tel" 
+              [(ngModel)]="createForm.receiverPhoneNumber" 
+              placeholder="Örn: 0555 987 65 43"
+              class="form-control"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label>E-posta *</label>
+            <input 
+              type="email" 
+              [(ngModel)]="createForm.receiverEmail" 
+              placeholder="Örn: mehmet@example.com"
+              class="form-control"
+              required
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeCreateModal()" [disabled]="creating">
+        İptal
+      </button>
+      <button class="btn-primary" (click)="createCargo()" [disabled]="creating">
+        <span *ngIf="!creating">Kargo Oluştur</span>
+        <span *ngIf="creating">Oluşturuluyor...</span>
       </button>
     </div>
   </div>

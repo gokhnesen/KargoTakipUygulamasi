@@ -1,90 +1,144 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { CargoServices } from '../../../core/services/cargoServices.service';
 import { Cargo } from '../../../shared/Cargo';
 import { CargoMovement } from '../../../shared/CargoMovement';
 import { CargoStatus } from '../../../shared/CargoStatus';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-cargo-details',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './cargo-details.component.html',
   styleUrl: './cargo-details.component.scss'
 })
-export class CargoDetailsComponent implements OnInit, OnChanges {
-  @Input() cargo: Cargo | null = null;
-  @Input() movements: CargoMovement[] = [];
-  @Input() isOpen: boolean = false;
-  @Output() closeModal = new EventEmitter<void>();
+export class CargoDetailsComponent implements OnInit {
+  cargo: Cargo | null = null;
+  movements: CargoMovement[] = [];
+  loading = false;
+  error: string | null = null;
+  successMessage: string | null = null;
+  validationError: string | null = null;
 
-  CargoStatus = CargoStatus;
+  showUpdateModal = false;
+  updateForm: Partial<CargoMovement> = {
+    cargoId: '',
+    newStatus: CargoStatus.InTransit,
+    location: '',
+    description: ''
+  };
+
+  cargoStatuses = [
+    { value: CargoStatus.Received, label: 'Teslim Alındı' },
+    { value: CargoStatus.Processing, label: 'İşleniyor' },
+    { value: CargoStatus.InTransit, label: 'Yolda' },
+    { value: CargoStatus.OutForDelivery, label: 'Dağıtımda' },
+    { value: CargoStatus.Delivered, label: 'Teslim Edildi' },
+    { value: CargoStatus.Undelivered, label: 'Teslim Edilemedi' }
+  ];
+
+  constructor(
+    private route: ActivatedRoute,
+    private cargoServices: CargoServices
+  ) {}
 
   ngOnInit(): void {
-    console.log('CargoDetailsComponent - ngOnInit');
-    console.log('isOpen:', this.isOpen);
-    console.log('cargo:', this.cargo);
+    const trackingNumber = this.route.snapshot.paramMap.get('trackingNumber');
+    if (trackingNumber) {
+      this.loadCargoDetails(trackingNumber);
+    }
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    console.log('CargoDetailsComponent - ngOnChanges');
-    console.log('Changes:', changes);
+  loadCargoDetails(trackingNumber: string): void {
+    this.loading = true;
+    this.error = null;
+
+    this.cargoServices.trackCargo(trackingNumber).subscribe({
+      next: (data) => {
+        this.cargo = data.cargo;
+        this.movements = data.movements || [];
+        this.updateForm.cargoId = this.cargo?.id || '';
+        this.loading = false;
+      },
+      error: (err: any) => {
+        this.error = 'Kargo bilgileri yüklenirken bir hata oluştu.';
+        this.loading = false;
+        console.error('Hata:', err);
+      }
+    });
+  }
+
+  openUpdateModal(): void {
+    if (this.cargo) {
+      this.updateForm = {
+        cargoId: this.cargo.id,
+        newStatus: this.cargo.status,
+        location: '',
+        description: ''
+      };
+      this.showUpdateModal = true;
+      this.validationError = null;
+      this.successMessage = null;
+    }
+  }
+
+  closeUpdateModal(): void {
+    this.showUpdateModal = false;
+    this.resetUpdateForm();
+    this.validationError = null;
+  }
+
+  submitUpdate(): void {
+    if (!this.updateForm.location?.trim() || !this.updateForm.description?.trim()) {
+      this.validationError = 'Lütfen tüm alanları doldurun.';
+      return;
+    }
+
+    this.validationError = null;
+    this.loading = true;
     
-    if (changes['isOpen']) {
-      console.log('isOpen değişti:', changes['isOpen'].currentValue);
-    }
-    if (changes['cargo']) {
-      console.log('cargo değişti:', changes['cargo'].currentValue);
-    }
+    this.cargoServices.updateMovement({
+      cargoId: this.updateForm.cargoId,
+      newStatus: Number(this.updateForm.newStatus),
+      location: this.updateForm.location,
+      description: this.updateForm.description
+    }).subscribe({
+      next: () => {
+        this.loading = false;
+        this.successMessage = 'Kargo durumu başarıyla güncellendi!';
+        
+        // 2 saniye sonra modalı kapat ve mesajı temizle
+        setTimeout(() => {
+          this.closeUpdateModal();
+          this.successMessage = null;
+          
+          // Kargo detaylarını yeniden yükle
+          if (this.cargo?.trackingNumber) {
+            this.loadCargoDetails(this.cargo.trackingNumber);
+          }
+        }, 2000);
+      },
+      error: (err: any) => {
+        this.validationError = 'Güncelleme sırasında bir hata oluştu: ' + (err.error?.message || 'Bilinmeyen hata');
+        this.loading = false;
+        console.error('Hata:', err);
+      }
+    });
   }
 
-  close(): void {
-    console.log('Modal close çağrıldı');
-    this.closeModal.emit();
-  }
-
-  onBackdropClick(event: MouseEvent): void {
-    console.log('Backdrop clicked');
-    if ((event.target as HTMLElement).classList.contains('modal-backdrop')) {
-      this.close();
-    }
-  }
-
-  getStatusText(status: CargoStatus): string {
-    const statusMap: Record<CargoStatus, string> = {
-      [CargoStatus.Created]: 'Oluşturuldu',
-      [CargoStatus.InTransit]: 'Yolda',
-      [CargoStatus.InWarehouse]: 'Depoda',
-      [CargoStatus.OutForDelivery]: 'Dağıtımda',
-      [CargoStatus.Delivered]: 'Teslim Edildi',
-      [CargoStatus.Cancelled]: 'İptal Edildi',
-      [CargoStatus.Returned]: 'İade Edildi'
+  resetUpdateForm(): void {
+    this.updateForm = {
+      cargoId: this.cargo?.id || '',
+      newStatus: this.cargo?.status || CargoStatus.InTransit,
+      location: '',
+      description: ''
     };
-    return statusMap[status] || 'Bilinmiyor';
   }
 
-  getStatusClass(status: CargoStatus): string {
-    const classMap: Record<CargoStatus, string> = {
-      [CargoStatus.Created]: 'status-created',
-      [CargoStatus.InTransit]: 'status-transit',
-      [CargoStatus.InWarehouse]: 'status-warehouse',
-      [CargoStatus.OutForDelivery]: 'status-delivery',
-      [CargoStatus.Delivered]: 'status-delivered',
-      [CargoStatus.Cancelled]: 'status-cancelled',
-      [CargoStatus.Returned]: 'status-returned'
-    };
-    return classMap[status] || '';
-  }
-
-  getStatusIcon(status: CargoStatus): string {
-    const iconMap: Record<CargoStatus, string> = {
-      [CargoStatus.Created]: '📦',
-      [CargoStatus.InTransit]: '🚚',
-      [CargoStatus.InWarehouse]: '🏢',
-      [CargoStatus.OutForDelivery]: '🚛',
-      [CargoStatus.Delivered]: '✅',
-      [CargoStatus.Cancelled]: '❌',
-      [CargoStatus.Returned]: '↩️'
-    };
-    return iconMap[status] || '📋';
+  getStatusLabel(status: CargoStatus): string {
+    const statusObj = this.cargoStatuses.find(s => s.value === status);
+    return statusObj?.label || 'Bilinmeyen';
   }
 }

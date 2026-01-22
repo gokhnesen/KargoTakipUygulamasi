@@ -104,26 +104,24 @@ export class Home {
 
   getStatusText(status: CargoStatus): string {
     const statusMap: Record<CargoStatus, string> = {
-      [CargoStatus.Created]: 'Oluşturuldu',
+      [CargoStatus.Received]: 'Teslim Alındı',
+      [CargoStatus.Processing]: 'İşleniyor',
       [CargoStatus.InTransit]: 'Yolda',
-      [CargoStatus.InWarehouse]: 'Depoda',
       [CargoStatus.OutForDelivery]: 'Dağıtımda',
       [CargoStatus.Delivered]: 'Teslim Edildi',
-      [CargoStatus.Cancelled]: 'İptal Edildi',
-      [CargoStatus.Returned]: 'İade Edildi'
+      [CargoStatus.Undelivered]: 'Teslim Edilemedi'
     };
     return statusMap[status] || 'Bilinmiyor';
   }
 
   getStatusIcon(status: CargoStatus): string {
     const iconMap: Record<CargoStatus, string> = {
-      [CargoStatus.Created]: '📦',
+      [CargoStatus.Received]: '📦',
+      [CargoStatus.Processing]: '⚙️',
       [CargoStatus.InTransit]: '🚚',
-      [CargoStatus.InWarehouse]: '🏢',
       [CargoStatus.OutForDelivery]: '🚛',
       [CargoStatus.Delivered]: '✅',
-      [CargoStatus.Cancelled]: '❌',
-      [CargoStatus.Returned]: '↩️'
+      [CargoStatus.Undelivered]: '❌'
     };
     return iconMap[status] || '📋';
   }

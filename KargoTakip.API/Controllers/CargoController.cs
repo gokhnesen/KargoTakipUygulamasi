@@ -48,8 +48,6 @@ namespace KargoTakip.API.Controllers
         }
 
         [HttpGet("{cargoId}/movements")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetCargoMovements(string cargoId)
         {
             var query = new GetCargoMovementsQuery { CargoId = cargoId };

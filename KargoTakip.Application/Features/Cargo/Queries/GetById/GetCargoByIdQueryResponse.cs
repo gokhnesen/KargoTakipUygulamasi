@@ -1,5 +1,7 @@
+using KargoTakip.Application.Dtos;
 using KargoTakip.Domain.Enums;
 using System;
+using System.Collections.Generic;
 
 namespace KargoTakip.Application.Features.Cargo.Queries.GetById
 {
@@ -18,5 +20,8 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetById
         public CargoStatus Status { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
+        public List<CargoMovementDto> Movements { get; set; }
     }
+
+
 }

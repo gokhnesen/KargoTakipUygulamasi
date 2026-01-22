@@ -14,11 +14,11 @@ export interface Cargo extends BaseEntity {
   movements?: CargoMovement[];
   status: CargoStatus;
   senderName?: string;
-  senderPhoneNumber?: string;
   senderAddress?: string;
+  senderPhoneNumber?: string;
   receiverName?: string;
   receiverSurname?: string;
+  receiverAddress?: string;
   receiverPhoneNumber?: string;
   receiverEmail?: string;
-  receiverAddress?: string;
 }
