@@ -365,3 +365,4 @@ FodyWeavers.xsd
 
 KargoTakip.Client/KargoTakipClient/ssl/cert.pem
 KargoTakip.Client/KargoTakipClient/ssl/key.pem
+/KargoTakip.API/appsettings.json
