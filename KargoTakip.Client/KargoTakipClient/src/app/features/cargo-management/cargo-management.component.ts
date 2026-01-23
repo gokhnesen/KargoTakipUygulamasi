@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { CargoServices } from '../../core/services/cargoServices.service';
 import { LoginServices } from '../../core/services/loginServices.service';
 import { Cargo } from '../../shared/Cargo';
+import { CargoMovement } from '../../shared/CargoMovement';
 import { CargoStatus } from '../../shared/CargoStatus';
 
 @Component({
@@ -22,6 +23,7 @@ export class CargoManagementComponent implements OnInit {
   searchTerm: string = '';
   
   selectedCargo: Cargo | null = null;
+  selectedCargoMovements: CargoMovement[] = [];
   showUpdateModal: boolean = false;
   showCreateModal: boolean = false;
   newStatus: CargoStatus = CargoStatus.InTransit;
@@ -32,7 +34,6 @@ export class CargoManagementComponent implements OnInit {
   successMessage: string | null = null;
   validationError: string | null = null;
 
-  // Kargo oluşturma formu
   createForm: Partial<Cargo> = {
     senderName: '',
     senderAddress: '',
@@ -64,6 +65,13 @@ export class CargoManagementComponent implements OnInit {
     this.loadCargos();
   }
 
+  convertToTurkeyTime(date: Date | string | undefined): Date | undefined {
+    if (!date) return undefined;
+    const d = new Date(date);
+    d.setHours(d.getHours() + 3);
+    return d;
+  }
+
   loadCargos(): void {
     this.loading = true;
     this.error = '';
@@ -75,7 +83,6 @@ export class CargoManagementComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        console.error('Kargolar yüklenirken hata:', err);
         this.error = 'Kargolar yüklenirken bir hata oluştu.';
         this.loading = false;
         
@@ -103,6 +110,7 @@ export class CargoManagementComponent implements OnInit {
 
   openUpdateModal(cargo: Cargo): void {
     this.selectedCargo = cargo;
+    this.selectedCargoMovements = cargo.movements || [];
     this.newStatus = cargo.status;
     this.newLocation = '';
     this.newDescription = '';
@@ -114,6 +122,7 @@ export class CargoManagementComponent implements OnInit {
   closeUpdateModal(): void {
     this.showUpdateModal = false;
     this.selectedCargo = null;
+    this.selectedCargoMovements = [];
     this.newStatus = CargoStatus.InTransit;
     this.newLocation = '';
     this.newDescription = '';
@@ -154,7 +163,6 @@ export class CargoManagementComponent implements OnInit {
   }
 
   createCargo(): void {
-    // Validasyon
     if (!this.createForm.senderName?.trim()) {
       this.validationError = 'Lütfen gönderici adını giriniz.';
       return;
@@ -195,7 +203,6 @@ export class CargoManagementComponent implements OnInit {
       return;
     }
 
-    // Email validasyonu
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.createForm.receiverEmail)) {
       this.validationError = 'Lütfen geçerli bir e-posta adresi giriniz.';
@@ -210,14 +217,12 @@ export class CargoManagementComponent implements OnInit {
         this.creating = false;
         this.successMessage = 'Kargo başarıyla oluşturuldu!';
         
-        // 2 saniye sonra modalı kapat ve listeyi yenile
         setTimeout(() => {
           this.closeCreateModal();
           this.loadCargos();
         }, 2000);
       },
       error: (err) => {
-        console.error('Oluşturma hatası:', err);
         this.validationError = 'Kargo oluşturulurken bir hata oluştu: ' + (err.error?.message || 'Bilinmeyen hata');
         this.creating = false;
       }
@@ -225,7 +230,6 @@ export class CargoManagementComponent implements OnInit {
   }
 
   updateCargoStatus(): void {
-    // Validasyon
     if (!this.newLocation.trim()) {
       this.validationError = 'Lütfen konum bilgisini giriniz.';
       return;
@@ -253,21 +257,22 @@ export class CargoManagementComponent implements OnInit {
         this.updating = false;
         this.successMessage = 'Kargo durumu başarıyla güncellendi!';
         
-        // 2 saniye sonra modalı kapat ve listeyi yenile
         setTimeout(() => {
           this.closeUpdateModal();
           this.loadCargos();
         }, 2000);
       },
       error: (err) => {
-        console.error('Güncelleme hatası:', err);
         this.validationError = 'Güncelleme sırasında bir hata oluştu: ' + (err.error?.message || 'Bilinmeyen hata');
         this.updating = false;
       }
     });
   }
 
-  getStatusText(status: CargoStatus): string {
+  getStatusText(status?: CargoStatus): string {
+    if (status === undefined) {
+      return 'Bilinmiyor';
+    }
     const statusMap: Record<CargoStatus, string> = {
       [CargoStatus.Received]: 'Teslim Alındı',
       [CargoStatus.Processing]: 'İşleniyor',
@@ -289,6 +294,18 @@ export class CargoManagementComponent implements OnInit {
       [CargoStatus.Undelivered]: 'status-undelivered'
     };
     return classMap[status] || '';
+  }
+
+  getStatusIcon(status: CargoStatus): string {
+    const iconMap: Record<CargoStatus, string> = {
+      [CargoStatus.Received]: '📦',
+      [CargoStatus.Processing]: '⚙️',
+      [CargoStatus.InTransit]: '🚚',
+      [CargoStatus.OutForDelivery]: '🚛',
+      [CargoStatus.Delivered]: '✅',
+      [CargoStatus.Undelivered]: '❌'
+    };
+    return iconMap[status] || '📋';
   }
 
   logout(): void {

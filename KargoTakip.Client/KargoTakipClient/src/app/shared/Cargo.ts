@@ -5,13 +5,13 @@ import { CargoSender } from "./CargoSender";
 import { CargoStatus } from "./CargoStatus";
 
 export interface Cargo extends BaseEntity {
-  currentLocation: any;
+  currentLocation?: string;
   trackingNumber: string;
   sender?: CargoSender;
   senderId?: string;
   receiver?: CargoReceiver;
   receiverId?: string;
-  movements?: CargoMovement[];
+  movements?: CargoMovement[];  // Kargo hareketleri listesi
   status: CargoStatus;
   senderName?: string;
   senderAddress?: string;

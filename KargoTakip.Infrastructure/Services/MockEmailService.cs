@@ -13,13 +13,10 @@ namespace KargoTakip.Infrastructure.Services
             _logger = logger;
         }
 
-        public Task SendAsync(string toEmail, string subject, string body, string htmlBody = null)
+        public Task SendAsync(string email, string subject, string body, string htmlBody)
         {
-            _logger.LogInformation("Mock Email Gönderiliyor:");
-            _logger.LogInformation("To: {Email}", toEmail);
-            _logger.LogInformation("Subject: {Subject}", subject);
-            _logger.LogInformation("Body: {Body}", body);
-            
+            _logger.LogInformation("[MOCK EMAIL] Email: {Email}, Konu: {Subject}, Body: {Body}", 
+                email, subject, body);
             return Task.CompletedTask;
         }
     }

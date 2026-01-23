@@ -3,13 +3,13 @@ import { Cargo } from "./Cargo";
 import { CargoStatus } from "./CargoStatus";
 
 export interface CargoMovement extends BaseEntity {
-timestamp: string|number|Date;
-status: CargoStatus;
-statusText: any;
-date: string|number|Date;
-  cargoId: string;
+  cargoId?: string;
   newStatus: CargoStatus;
   location: string;
   description: string;
   cargo?: Cargo;
+  timestamp?: string | number | Date;
+  status?: CargoStatus;
+  statusText?: string;
+  date?: string | number | Date;
 }

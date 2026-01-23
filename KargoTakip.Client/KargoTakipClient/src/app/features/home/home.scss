@@ -299,18 +299,190 @@ button:disabled, input:disabled {
   }
 }
 
+// Kargo hareketleri timeline stilleri
 .movements-section {
-  h4 {
-    margin: 0 0 24px;
+  margin-top: 0;
+  background: white;
+  border: 1px solid #e8eaf0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  animation: cardSlideIn 0.6s ease-out 0.2s backwards;
+
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
     color: #333;
-    font-size: 20px;
-    font-weight: 700;
+    margin: 0;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+    border-bottom: 2px solid #e0e7ff;
     display: flex;
     align-items: center;
     gap: 8px;
   }
 }
 
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.movements-timeline {
+  padding: 20px;
+  max-height: 350px;
+  overflow-y: auto;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+    
+    &:hover {
+      background: #a8a8a8;
+    }
+  }
+}
+
+.movement-item {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  
+  &:last-child {
+    margin-bottom: 0;
+    
+    .movement-line {
+      display: none;
+    }
+  }
+}
+
+.movement-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.movement-dot {
+  width: 12px;
+  height: 12px;
+  background: #667eea;
+  border: 3px solid #e8ebff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  z-index: 1;
+}
+
+.movement-line {
+  width: 2px;
+  flex: 1;
+  background: linear-gradient(to bottom, #667eea, #e0e0e0);
+  margin: 4px 0;
+  min-height: 20px;
+}
+
+.movement-card {
+  flex: 1;
+  background: white;
+  border: 1px solid #e8eaf0;
+  border-radius: 8px;
+  padding: 14px 18px;
+  transition: all 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  
+  &:hover {
+    background: #f5f7ff;
+    border-color: #667eea;
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  }
+}
+
+.movement-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.status-badge {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.movement-time {
+  font-size: 11px;
+  color: #999;
+  font-weight: 500;
+}
+
+.movement-location {
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.movement-desc {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+  padding-left: 18px;
+  position: relative;
+  
+  &::before {
+    content: '•';
+    position: absolute;
+    left: 6px;
+    color: #999;
+  }
+}
+
+.no-movements {
+  text-align: center;
+  padding: 50px 20px;
+  color: #999;
+  background: linear-gradient(135deg, #fafbfc 0%, #f5f7fa 100%);
+  border: 2px dashed #e0e0e0;
+  border-radius: 10px;
+  margin-top: 24px;
+
+  p {
+    margin: 0;
+    font-size: 15px;
+    font-style: italic;
+    font-weight: 500;
+  }
+}
+
+// Eski timeline stilleri - kullanılmıyor artık
 .timeline {
   position: relative;
   padding-left: 35px;
@@ -327,98 +499,9 @@ button:disabled, input:disabled {
   }
 }
 
-.timeline-item {
+.timeline-item-old {
   position: relative;
   margin-bottom: 24px;
-  animation: slideInLeft 0.5s ease-out backwards;
-
-  @for $i from 1 through 10 {
-    &:nth-child(#{$i}) {
-      animation-delay: #{$i * 0.1}s;
-    }
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.timeline-dot {
-  position: absolute;
-  left: -30px;
-  top: 8px;
-  width: 20px;
-  height: 20px;
-  background: #667eea;
-  border-radius: 50%;
-  border: 4px solid white;
-  box-shadow: 0 0 0 3px #667eea;
-  z-index: 1;
-}
-
-.timeline-content {
-  background: #f8f9fa;
-  padding: 18px 20px;
-  border-radius: 12px;
-  border-left: 4px solid #667eea;
-  transition: all 0.3s;
-
-  &:hover {
-    background: #e9ecef;
-    transform: translateX(6px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  }
-}
-
-.movement-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.movement-status {
-  font-weight: 700;
-  color: #667eea;
-  font-size: 16px;
-}
-
-.movement-date {
-  font-size: 14px;
-  color: #999;
-  font-weight: 500;
-}
-
-.movement-location {
-  margin: 6px 0;
-  color: #666;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.movement-desc {
-  margin: 6px 0 0;
-  color: #999;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.no-movements {
-  text-align: center;
-  color: #999;
-  padding: 30px;
-  font-size: 15px;
-  background: #f8f9fa;
-  border-radius: 12px;
 }
 
 // Responsive

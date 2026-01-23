@@ -14,9 +14,15 @@ namespace KargoTakip.Infrastructure
     {
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
+            var useInfobip = configuration.GetValue<bool>("Infobip:Enabled", false);
             var useAzureCommunicationServices = configuration.GetValue<bool>("AzureCommunicationServices:Enabled", false);
 
-            if (useAzureCommunicationServices)
+            if (useInfobip)
+            {
+                services.AddHttpClient<ISmsService, InfobipSmsService>();
+                services.AddScoped<IEmailService, MockEmailService>();
+            }
+            else if (useAzureCommunicationServices)
             {
                 //services.AddScoped<IEmailService, AzureCommunicationEmailService>();
                 //services.AddScoped<ISmsService, AzureCommunicationSmsService>();

@@ -33,13 +33,11 @@ export class Login {
 
     this.loginService.login(this.email, this.password).subscribe({
       next: (response) => {
-        console.log('Login başarılı:', response);
         localStorage.setItem('token', response.token);
         localStorage.setItem('refreshToken', response.refreshToken);        
         this.router.navigate(['/cargo-management']);
       },
       error: (error) => {
-        console.error('Login hatası:', error);
         this.error = error.status === 401 
           ? 'E-posta veya şifre hatalı.' 
           : 'Bir hata oluştu. Lütfen tekrar deneyin.';

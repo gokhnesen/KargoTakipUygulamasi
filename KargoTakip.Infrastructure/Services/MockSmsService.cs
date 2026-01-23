@@ -15,10 +15,7 @@ namespace KargoTakip.Infrastructure.Services
 
         public Task SendAsync(string phoneNumber, string message)
         {
-            _logger.LogInformation("Mock SMS Gönderiliyor:");
-            _logger.LogInformation("To: {Phone}", phoneNumber);
-            _logger.LogInformation("Message: {Message}", message);
-            
+            _logger.LogInformation("[MOCK SMS] Telefon: {Phone}, Mesaj: {Message}", phoneNumber, message);
             return Task.CompletedTask;
         }
     }

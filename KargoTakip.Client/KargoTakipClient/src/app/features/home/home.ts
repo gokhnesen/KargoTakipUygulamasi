@@ -6,12 +6,11 @@ import { CargoServices } from '../../core/services/cargoServices.service';
 import { Cargo } from '../../shared/Cargo';
 import { CargoMovement } from '../../shared/CargoMovement';
 import { CargoStatus } from '../../shared/CargoStatus';
-import { CargoDetailsComponent } from "../cargo-tracking/cargo-details/cargo-details.component";
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, CargoDetailsComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './home.html',
   styleUrls: ['./home.scss']
 })
@@ -31,9 +30,14 @@ export class Home {
     private cdr: ChangeDetectorRef
   ) {}
 
-  searchCargo() { 
-    console.log('searchCargo çağrıldı, trackingCode:', this.trackingCode);
-    
+  convertToTurkeyTime(date: Date | string | undefined): Date | undefined {
+    if (!date) return undefined;
+    const d = new Date(date);
+    d.setHours(d.getHours() + 3);
+    return d;
+  }
+
+  searchCargo() {
     if (!this.trackingCode.trim()) {
       this.error = 'Lütfen takip numarası giriniz.';
       return;
@@ -46,8 +50,6 @@ export class Home {
 
     this.cargoService.trackCargo(this.trackingCode.trim()).subscribe({
       next: (response) => {
-        console.log('API Başarılı Yanıt:', response);
-        
         if (!response) {
           this.error = 'Kargo bulunamadı.';
           this.loading = false;
@@ -82,11 +84,8 @@ export class Home {
         this.loading = false;
         this.showResults = true;
         this.cdr.detectChanges();
-        
-        console.log('Sonuçlar gösteriliyor, showResults:', this.showResults);
       },
       error: (err) => {
-        console.error('API Hatası:', err);
         this.error = err.status === 404 
           ? 'Kargo bulunamadı. Lütfen takip numarasını kontrol ediniz.' 
           : 'Bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.';
@@ -102,7 +101,10 @@ export class Home {
     this.movements = [];
   }
 
-  getStatusText(status: CargoStatus): string {
+  getStatusText(status?: CargoStatus): string {
+    if (status === undefined) {
+      return 'Bilinmiyor';
+    }
     const statusMap: Record<CargoStatus, string> = {
       [CargoStatus.Received]: 'Teslim Alındı',
       [CargoStatus.Processing]: 'İşleniyor',

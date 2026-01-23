@@ -68,24 +68,28 @@
         </div>
       </div>
 
-      <div class="movements-section">
-        <h4>📍 Kargo Hareketleri</h4>
-        <div class="timeline" *ngIf="movements && movements.length > 0">
-          <div class="timeline-item" *ngFor="let movement of movements">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-              <div class="movement-header">
-                <span class="movement-status">{{ movement.statusText || getStatusText(movement.status) }}</span>
-                <span class="movement-date">{{ movement.date | date: 'dd.MM.yyyy HH:mm' }}</span>
+      <div class="movements-section" *ngIf="movements && movements.length > 0">
+        <h3 class="section-title">📍 Geçmiş Hareketler</h3>
+        <div class="movements-timeline">
+          <div class="movement-item" *ngFor="let movement of movements; let i = index">
+            <div class="movement-indicator">
+              <div class="movement-dot"></div>
+              <div class="movement-line" *ngIf="i < movements.length - 1"></div>
+            </div>
+            <div class="movement-card">
+              <div class="movement-top">
+                <span class="status-badge">{{ getStatusText(movement.newStatus || movement.status) }}</span>
+                <span class="movement-time">{{ convertToTurkeyTime(movement.createdDate) | date: 'dd MMM HH:mm':'':'tr-TR' }}</span>
               </div>
-              <p class="movement-location">📍 {{ movement.location }}</p>
-              <p class="movement-desc" *ngIf="movement.description">{{ movement.description }}</p>
+              <div class="movement-location">📍 {{ movement.location }}</div>
+              <div class="movement-desc" *ngIf="movement.description">{{ movement.description }}</div>
             </div>
           </div>
         </div>
-        <p *ngIf="!movements || movements.length === 0" class="no-movements">
-          Henüz hareket kaydı bulunmamaktadır.
-        </p>
+      </div>
+
+      <div class="no-movements" *ngIf="!movements || movements.length === 0">
+        <p>📭 Henüz hareket kaydı bulunmamaktadır</p>
       </div>
     </div>
   </div>

@@ -53,8 +53,9 @@
         </div>
         
         <div class="detail-section">
-          <p><strong>Oluşturulma:</strong> {{ cargo.createdDate | date:'dd.MM.yyyy HH:mm' }}</p>
-          <p><strong>Güncellenme:</strong> {{ cargo.updatedDate | date:'dd.MM.yyyy HH:mm' }}</p>
+          <p class="current-location"><strong>📍 Şuanki Konum:</strong> {{ cargo.currentLocation || (cargo.movements && cargo.movements.length > 0 ? cargo.movements[0].location : 'Bilinmiyor') }}</p>
+          <p><strong>Oluşturulma:</strong> {{ convertToTurkeyTime(cargo.createdDate) | date:'dd.MM.yyyy HH:mm':'':'tr-TR' }}</p>
+          <p><strong>Güncellenme:</strong> {{ convertToTurkeyTime(cargo.updatedDate) | date:'dd.MM.yyyy HH:mm':'':'tr-TR' }}</p>
         </div>
       </div>
       
@@ -71,67 +72,122 @@
   </div>
 </div>
 
-<!-- Durum Güncelleme Modal -->
 <div class="modal-backdrop" *ngIf="showUpdateModal" (click)="closeUpdateModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Kargo Durumu Güncelle</h2>
+  <div class="modal-content update-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header gradient-header">
+      <div class="header-content">
+        <span class="header-icon">📦</span>
+        <div>
+          <h2>Kargo Durumu Güncelle</h2>
+          <p class="header-subtitle">{{ selectedCargo?.trackingNumber }}</p>
+        </div>
+      </div>
       <button class="close-btn" (click)="closeUpdateModal()">✕</button>
     </div>
 
     <div class="modal-body">
-      <!-- Başarı Mesajı -->
       <div *ngIf="successMessage" class="success-alert">
         ✓ {{ successMessage }}
       </div>
 
-      <!-- Hata Mesajı -->
       <div *ngIf="validationError" class="error-alert">
         ⚠ {{ validationError }}
       </div>
 
-      <div class="cargo-info-section">
-        <p><strong>Takip No:</strong> {{ selectedCargo?.trackingNumber }}</p>
-        <p><strong>Mevcut Durum:</strong> {{ getStatusText(selectedCargo?.status!) }}</p>
+      <div class="status-card">
+        <div class="status-icon-wrapper">
+          <span class="status-icon">{{ getStatusIcon(selectedCargo?.status!) }}</span>
+        </div>
+        <div class="status-content">
+          <span class="status-label">Mevcut Durum</span>
+          <span class="status-value" [class]="getStatusClass(selectedCargo?.status!)">{{ getStatusText(selectedCargo?.status!) }}</span>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label>Yeni Durum</label>
-        <select [(ngModel)]="newStatus" class="form-control">
-          <option *ngFor="let option of statusOptions" [value]="option.value">
-            {{ option.label }}
-          </option>
-        </select>
+      <div class="update-form-card">
+        <div class="card-header-mini">
+          <span class="card-icon">✏️</span>
+          <h3>Yeni Hareket Ekle</h3>
+        </div>
+        
+        <div class="form-content">
+          <div class="form-row-modern">
+            <div class="form-field">
+              <label class="modern-label">
+                <span class="label-icon">🏷️</span>
+                Yeni Durum
+              </label>
+              <select [(ngModel)]="newStatus" class="modern-select">
+                <option *ngFor="let option of statusOptions" [value]="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label class="modern-label">
+                <span class="label-icon">📍</span>
+                Konum *
+              </label>
+              <input 
+                type="text" 
+                [(ngModel)]="newLocation" 
+                placeholder="İstanbul Dağıtım Merkezi"
+                class="modern-input"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-field full-width">
+            <label class="modern-label">
+              <span class="label-icon">📝</span>
+              Açıklama *
+            </label>
+            <textarea 
+              [(ngModel)]="newDescription" 
+              placeholder="Kargo hareketine dair detaylı açıklama giriniz..."
+              class="modern-textarea"
+              rows="3"
+              required
+            ></textarea>
+          </div>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label>Konum *</label>
-        <input 
-          type="text" 
-          [(ngModel)]="newLocation" 
-          placeholder="Örn: İstanbul Dağıtım Merkezi"
-          class="form-control"
-          required
-        />
+      <div class="movements-section" *ngIf="selectedCargoMovements && selectedCargoMovements.length > 0">
+        <h3 class="section-title">📍 Geçmiş Hareketler</h3>
+        <div class="movements-timeline">
+          <div class="movement-item" *ngFor="let movement of selectedCargoMovements; let i = index">
+            <div class="movement-indicator">
+              <div class="movement-dot"></div>
+              <div class="movement-line" *ngIf="i < selectedCargoMovements.length - 1"></div>
+            </div>
+            <div class="movement-card">
+              <div class="movement-top">
+                <span class="status-badge">{{ getStatusText(movement.newStatus || movement.status) }}</span>
+                <span class="movement-time">{{ convertToTurkeyTime(movement.createdDate) | date: 'dd MMM HH:mm':'':'tr-TR' }}</span>
+              </div>
+              <div class="movement-location">📍 {{ movement.location }}</div>
+              <div class="movement-desc" *ngIf="movement.description">{{ movement.description }}</div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label>Açıklama *</label>
-        <textarea 
-          [(ngModel)]="newDescription" 
-          placeholder="Detaylı açıklama giriniz..."
-          class="form-control"
-          rows="3"
-          required
-        ></textarea>
+      <div class="no-movements" *ngIf="!selectedCargoMovements || selectedCargoMovements.length === 0">
+        <p>📭 Henüz hareket kaydı bulunmamaktadır</p>
       </div>
     </div>
 
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="closeUpdateModal()" [disabled]="updating">
+    <div class="modal-footer modern-footer">
+      <button class="btn-cancel" (click)="closeUpdateModal()" [disabled]="updating">
+        <span class="btn-icon">✕</span>
         İptal
       </button>
-      <button class="btn-primary" (click)="updateCargoStatus()" [disabled]="updating">
+      <button class="btn-submit" (click)="updateCargoStatus()" [disabled]="updating">
+        <span class="btn-icon" *ngIf="!updating">✓</span>
+        <span class="btn-spinner" *ngIf="updating">⏳</span>
         <span *ngIf="!updating">Güncelle</span>
         <span *ngIf="updating">Güncelleniyor...</span>
       </button>

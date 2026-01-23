@@ -29,11 +29,9 @@ export class CargoTrackingComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
-      console.log('1. URL Parametreleri Geldi:', params);
       const trackingNo = params['tracking'];
       
       if (trackingNo) {
-        console.log('2. Takip Numarası Tespit Edildi:', trackingNo);
         this.trackingNumber = trackingNo;
         setTimeout(() => {
           this.trackCargo(); 
@@ -46,13 +44,9 @@ export class CargoTrackingComponent implements OnInit {
     if (event) {
       event.preventDefault();
     }
-    
-    console.log('3. trackCargo Metodu Çalıştı. No:', this.trackingNumber);
-    console.log('Event:', event);
 
     if (!this.trackingNumber.trim()) {
       this.error = 'Lütfen takip numarası giriniz.';
-      console.log('Hata: Takip numarası boş');
       return;
     }
 
@@ -60,55 +54,39 @@ export class CargoTrackingComponent implements OnInit {
     this.error = '';
     this.cargo = null;
 
-    console.log('API çağrısı yapılıyor...');
-
     this.cargoService.trackCargo(this.trackingNumber).subscribe({
       next: (response) => {
-        console.log('4. API Başarılı Yanıt Döndü:', response);
-        
         if (!response) {
           this.error = 'Kargo bulunamadı.';
           this.loading = false;
-          console.log('Hata: Response boş');
           return;
         }
 
         this.cargo = {
+          id: response.id,
           trackingNumber: response.trackingNumber,
-          status: response.currentStatus,
+          status: response.status,
           currentLocation: response.currentLocation,
-          sender: {
-            fullName: response.sender.fullName,
-            address: response.sender.address,
-            phoneNumber: response.sender.phoneNumber
-          },
-          receiver: {
-            fullName: response.receiver.fullName,
-            address: response.receiver.address,
-            phoneNumber: response.receiver.phoneNumber,
-            email: response.receiver.email
-          }
+          senderName: response.senderName,
+          senderAddress: response.senderAddress,
+          senderPhoneNumber: response.senderPhoneNumber,
+          receiverName: response.receiverName,
+          receiverSurname: response.receiverSurname,
+          receiverAddress: response.receiverAddress,
+          receiverPhoneNumber: response.receiverPhoneNumber,
+          receiverEmail: response.receiverEmail,
+          movements: response.movements || [],
+          createdDate: response.createdDate,
+          updatedDate: response.updatedDate
         } as Cargo;
         
-        this.movements = (response.movements || []).map((m: any) => ({
-          status: m.status,
-          statusText: m.statusText,
-          location: m.location,
-          description: m.description,
-          date: m.date
-        }));
-
-        console.log('5. Cargo set:', this.cargo);
-        console.log('6. Movements set:', this.movements);
+        this.movements = response.movements || [];
 
         this.loading = false;
         
-        // Kargo detay sayfasına yönlendir
-        console.log('7. Detay sayfasına yönlendiriliyor...');
         this.router.navigate(['/cargo-tracking', this.trackingNumber]);
       },
       error: (err) => {
-        console.error('API Hatası:', err);
         this.error = err.status === 404 
           ? 'Kargo bulunamadı. Lütfen takip numarasını kontrol ediniz.' 
           : 'Bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.';
