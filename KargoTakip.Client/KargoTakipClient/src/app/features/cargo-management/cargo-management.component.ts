@@ -33,6 +33,7 @@ export class CargoManagementComponent implements OnInit {
   creating: boolean = false;
   successMessage: string | null = null;
   validationError: string | null = null;
+  sidebarOpen: boolean = false;
 
   createForm: Partial<Cargo> = {
     senderName: '',
@@ -63,6 +64,14 @@ export class CargoManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCargos();
+  }
+
+  toggleSidebar(): void {
+    this.sidebarOpen = !this.sidebarOpen;
+  }
+
+  closeSidebar(): void {
+    this.sidebarOpen = false;
   }
 
   convertToTurkeyTime(date: Date | string | undefined): Date | undefined {

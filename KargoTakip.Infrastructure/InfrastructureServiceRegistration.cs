@@ -14,27 +14,15 @@ namespace KargoTakip.Infrastructure
     {
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
+            var useBrevo = configuration.GetValue<bool>("Brevo:Enabled", false);
             var useInfobip = configuration.GetValue<bool>("Infobip:Enabled", false);
             var useAzureCommunicationServices = configuration.GetValue<bool>("AzureCommunicationServices:Enabled", false);
 
-            if (useInfobip)
-            {
-                services.AddHttpClient<ISmsService, InfobipSmsService>();
-                services.AddScoped<IEmailService, MockEmailService>();
-            }
-            else if (useAzureCommunicationServices)
-            {
-                //services.AddScoped<IEmailService, AzureCommunicationEmailService>();
-                //services.AddScoped<ISmsService, AzureCommunicationSmsService>();
-            }
-            else
-            {
-                services.AddScoped<IEmailService, MockEmailService>();
-                services.AddScoped<ISmsService, MockSmsService>();
-            }
+            services.AddHttpClient<ISmsService, BrevoSmsService>();
+            services.AddScoped<IEmailService, BrevoEmailService>();
+            
 
             services.AddScoped<INotificationService, NotificationService>();
-
             return services;
         }
     }

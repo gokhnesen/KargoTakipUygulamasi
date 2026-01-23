@@ -94,11 +94,6 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.Create
                 }
 
                 var statusMessage = GetStatusMessage(request.NewStatus);
-                var smsMessage = $"Sayın {receiver.Name} {receiver.Surname}, {cargo.TrackingNumber} takip numaralı kargonuz {statusMessage}. Konum: {request.Location}";
-
-                await _notificationService.SendSmsAsync(receiver.PhoneNumber, smsMessage);
-                _logger.LogInformation("SMS gönderildi. Telefon: {Phone}", receiver.PhoneNumber);
-
                 var emailSubject = $"Kargo Durum Güncellesi - {cargo.TrackingNumber}";
                 var emailBody = BuildEmailBody(receiver, cargo, request, statusMessage);
 
