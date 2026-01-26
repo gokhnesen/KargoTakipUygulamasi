@@ -1,5 +1,6 @@
 ﻿using KargoTakip.Application.Exceptions;
 using KargoTakip.Application.Interfaces;
+using KargoTakip.Application.Services;
 using KargoTakip.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -15,22 +16,25 @@ namespace KargoTakip.Application.Features.Cargo.Commands.Create
         private readonly IGenericRepository<CargoSender> _senderRepository;
         private readonly IGenericRepository<CargoReceiver> _receiverRepository;
         private readonly ILogger<CreateCargoCommandHandler> _logger;
+        private readonly TrackingNumberGenerator _trackingNumberGenerator;
 
         public CreateCargoCommandHandler(
             IGenericRepository<Domain.Entities.Cargo> cargoRepository,
             IGenericRepository<CargoSender> senderRepository,
             IGenericRepository<CargoReceiver> receiverRepository,
-            ILogger<CreateCargoCommandHandler> logger)
+            ILogger<CreateCargoCommandHandler> logger,
+            TrackingNumberGenerator trackingNumberGenerator)
         {
             _cargoRepository = cargoRepository;
             _senderRepository = senderRepository;
             _receiverRepository = receiverRepository;
             _logger = logger;
+            _trackingNumberGenerator = trackingNumberGenerator;
         }
 
         public async Task<CreateCargoCommandResponse> Handle(CreateCargoCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Yeni kargo oluşturma işlemi başlatıldı. Gönderen: {SenderName}", request.SenderFullName);
+            _logger.LogInformation("Yeni kargo olusturma islemi baslatildi. Gonderen: {SenderName}", request.SenderFullName);
 
             var sender = new CargoSender
             {
@@ -42,11 +46,11 @@ namespace KargoTakip.Application.Features.Cargo.Commands.Create
             var createdSender = await _senderRepository.AddAsync(sender);
             if (createdSender == null)
             {
-                _logger.LogError("Gönderen bilgileri kaydedilemedi.");
-                throw new BusinessException("Gönderen bilgileri kaydedilemedi.");
+                _logger.LogError("Gonderen bilgileri kaydedilemedi.");
+                throw new BusinessException("Gonderen bilgileri kaydedilemedi.");
             }
 
-            _logger.LogDebug("Gönderen kaydedildi. Id: {SenderId}", createdSender.Id);
+            _logger.LogDebug("Gonderen kaydedildi. Id: {SenderId}", createdSender.Id);
 
             var receiver = new CargoReceiver
             {
@@ -60,19 +64,19 @@ namespace KargoTakip.Application.Features.Cargo.Commands.Create
             var createdReceiver = await _receiverRepository.AddAsync(receiver);
             if (createdReceiver == null)
             {
-                _logger.LogError("Alıcı bilgileri kaydedilemedi.");
-                throw new BusinessException("Alıcı bilgileri kaydedilemedi.");
+                _logger.LogError("Alici bilgileri kaydedilemedi.");
+                throw new BusinessException("Alici bilgileri kaydedilemedi.");
             }
 
-            _logger.LogDebug("Alıcı kaydedildi. Id: {ReceiverId}", createdReceiver.Id);
+            _logger.LogDebug("Alici kaydedildi. Id: {ReceiverId}", createdReceiver.Id);
 
-            var trackingNumber = GenerateTrackingNumber();
+            var trackingNumber = _trackingNumberGenerator.Generate();
 
             var existingCargo = await _cargoRepository.GetValueByExpressionAsync(c => c.TrackingNumber == trackingNumber);
             if (existingCargo != null)
             {
-                _logger.LogWarning("Takip numarası çakışması: {TrackingNumber}", trackingNumber);
-                throw new BusinessException("Takip numarası zaten mevcut. Lütfen tekrar deneyin.");
+                _logger.LogWarning("Takip numarasi cakismasi: {TrackingNumber}", trackingNumber);
+                throw new BusinessException("Takip numarasi zaten mevcut. Lutfen tekrar deneyin.");
             }
 
             var cargo = new Domain.Entities.Cargo
@@ -86,11 +90,11 @@ namespace KargoTakip.Application.Features.Cargo.Commands.Create
             var createdCargo = await _cargoRepository.AddAsync(cargo);
             if (createdCargo == null)
             {
-                _logger.LogError("Kargo kaydı oluşturulamadı.");
-                throw new BusinessException("Kargo kaydı oluşturulamadı.");
+                _logger.LogError("Kargo kaydi olusturulamadi.");
+                throw new BusinessException("Kargo kaydi olusturulamadi.");
             }
 
-            _logger.LogInformation("Kargo başarıyla oluşturuldu. Takip No: {TrackingNumber}", trackingNumber);
+            _logger.LogInformation("Kargo basariyla olusturuldu. Takip No: {TrackingNumber}", trackingNumber);
 
             return new CreateCargoCommandResponse
             {
@@ -102,18 +106,6 @@ namespace KargoTakip.Application.Features.Cargo.Commands.Create
                 ReceiverAddress = createdReceiver.FullAddress,
                 CargoStatus = createdCargo.Status
             };
-        }
-
-        private string GenerateTrackingNumber()
-        {
-            const string karakterler = "ABCDEFGH IJKLMNOPQRSTUVWXYZ0123456789";
-            var random = new Random();
-
-            var sonuc = new string(Enumerable.Repeat(karakterler, 10)
-                .Select(s => s[random.Next(s.Length)])
-                .ToArray());
-
-            return sonuc;
         }
     }
 }

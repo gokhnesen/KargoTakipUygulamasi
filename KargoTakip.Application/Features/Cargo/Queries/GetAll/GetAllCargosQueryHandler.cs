@@ -1,6 +1,7 @@
 ﻿using KargoTakip.Application.Dtos;
 using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.Cargo;
+using KargoTakip.Application.Services;
 using KargoTakip.Domain.Entities;
 using KargoTakip.Domain.Enums;
 using MediatR;
@@ -16,26 +17,29 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
     {
         private readonly ICargoRepository _cargoRepository;
         private readonly ILogger<GetAllCargosQueryHandler> _logger;
+        private readonly CargoStatusHelper _statusHelper;
 
         public GetAllCargosQueryHandler(
             ICargoRepository cargoRepository,
-            ILogger<GetAllCargosQueryHandler> logger)
+            ILogger<GetAllCargosQueryHandler> logger,
+            CargoStatusHelper statusHelper)
         {
             _cargoRepository = cargoRepository;
             _logger = logger;
+            _statusHelper = statusHelper;
         }
 
         public async Task<List<GetAllCargosQueryResponse>> Handle(GetAllCargosQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Tüm kargolar listeleniyor.");
+            _logger.LogInformation("Tum kargolar listeleniyor.");
 
             var cargos = await _cargoRepository.GetAllCargosAsync();
 
-            _logger.LogInformation("Veritabanından {Count} adet kargo getirildi.", cargos?.Count ?? 0);
+            _logger.LogInformation("Veritabanindan {Count} adet kargo getirildi.", cargos?.Count ?? 0);
 
             if (cargos == null || !cargos.Any())
             {
-                _logger.LogWarning("Hiç kargo bulunamadı.");
+                _logger.LogWarning("Hic kargo bulunamadi.");
                 return new List<GetAllCargosQueryResponse>();
             }
 
@@ -64,22 +68,9 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
                 }).ToList() ?? new List<CargoMovementDto>()
             }).ToList();
 
-            _logger.LogInformation("{Count} adet kargo başarıyla listelendi.", response.Count);
+            _logger.LogInformation("{Count} adet kargo basariyla listelendi.", response.Count);
 
             return response;
-        }
-
-        private string GetStatusText(CargoStatus status)
-        {
-            return status switch
-            {
-                CargoStatus.Received => "Teslim Alındı",
-                CargoStatus.InTransit => "Yolda",
-                CargoStatus.OutForDelivery => "Dağıtımda",
-                CargoStatus.Delivered => "Teslim Edildi",
-                CargoStatus.Undelivered => "Teslim Edilemedi",
-                _ => "Bilinmiyor"
-            };
         }
     }
 }

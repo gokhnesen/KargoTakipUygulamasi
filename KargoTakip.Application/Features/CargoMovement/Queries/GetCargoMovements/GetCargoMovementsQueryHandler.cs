@@ -34,8 +34,8 @@ namespace KargoTakip.Application.Features.CargoMovement.Queries.GetCargoMovement
             var cargo = await _cargoRepository.GetValueByExpressionAsync(c => c.Id == request.CargoId && !c.IsDeleted);
             if (cargo == null)
             {
-                _logger.LogWarning("Kargo bulunamadı. CargoId: {CargoId}", request.CargoId);
-                throw new NotFoundException("Kargo bulunamadı.");
+                _logger.LogWarning("Kargo bulunamadi. CargoId: {CargoId}", request.CargoId);
+                throw new NotFoundException("Kargo bulunamadi.");
             }
 
             var movements = await _movementRepository.GetMovementsByCargoIdAsync(request.CargoId);
@@ -54,21 +54,8 @@ namespace KargoTakip.Application.Features.CargoMovement.Queries.GetCargoMovement
                 }).ToList()
             };
 
-            _logger.LogInformation("Kargo hareketleri getirildi. Hareket sayısı: {Count}", movements.Count);
+            _logger.LogInformation("Kargo hareketleri getirildi. Hareket sayisi: {Count}", movements.Count);
             return response;
-        }
-
-        private string GetStatusText(CargoStatus status)
-        {
-            return status switch
-            {
-                CargoStatus.Received => "Teslim Alındı",
-                CargoStatus.InTransit => "Yolda",
-                CargoStatus.OutForDelivery => "Dağıtımda",
-                CargoStatus.Delivered => "Teslim Edildi",
-                CargoStatus.Undelivered => "Teslim Edilemedi",
-                _ => "Bilinmiyor"
-            };
         }
     }
 }

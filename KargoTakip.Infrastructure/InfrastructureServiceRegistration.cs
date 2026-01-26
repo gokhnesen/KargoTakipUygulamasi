@@ -15,10 +15,7 @@ namespace KargoTakip.Infrastructure
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
             var useBrevo = configuration.GetValue<bool>("Brevo:Enabled", false);
-            var useInfobip = configuration.GetValue<bool>("Infobip:Enabled", false);
-            var useAzureCommunicationServices = configuration.GetValue<bool>("AzureCommunicationServices:Enabled", false);
 
-            services.AddHttpClient<ISmsService, BrevoSmsService>();
             services.AddScoped<IEmailService, BrevoEmailService>();
             
 

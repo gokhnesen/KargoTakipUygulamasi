@@ -1,6 +1,7 @@
 ﻿using KargoTakip.Application.Exceptions;
 using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.CargoMovement;
+using KargoTakip.Application.Services;
 using KargoTakip.Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -17,32 +18,35 @@ namespace KargoTakip.Application.Features.CargoMovement.Queries.TrackCargo
         private readonly IGenericRepository<Domain.Entities.CargoSender> _senderRepository;
         private readonly IGenericRepository<Domain.Entities.CargoReceiver> _receiverRepository;
         private readonly ILogger<TrackCargoQueryHandler> _logger;
+        private readonly CargoStatusHelper _statusHelper;
 
         public TrackCargoQueryHandler(
             ICargoMovementRepository movementRepository,
             IGenericRepository<Domain.Entities.Cargo> cargoRepository,
             IGenericRepository<Domain.Entities.CargoSender> senderRepository,
             IGenericRepository<Domain.Entities.CargoReceiver> receiverRepository,
-            ILogger<TrackCargoQueryHandler> logger)
+            ILogger<TrackCargoQueryHandler> logger,
+            CargoStatusHelper statusHelper)
         {
             _movementRepository = movementRepository;
             _cargoRepository = cargoRepository;
             _senderRepository = senderRepository;
             _receiverRepository = receiverRepository;
             _logger = logger;
+            _statusHelper = statusHelper;
         }
 
         public async Task<TrackCargoQueryResponse> Handle(TrackCargoQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Kargo takip sorgusu başlatıldı. TrackingNumber: {TrackingNumber}", request.TrackingNumber);
+            _logger.LogInformation("Kargo takip sorgusu baslatildi. TrackingNumber: {TrackingNumber}", request.TrackingNumber);
 
             var cargo = await _cargoRepository.GetValueByExpressionAsync(
                 c => c.TrackingNumber == request.TrackingNumber && !c.IsDeleted);
 
             if (cargo == null)
             {
-                _logger.LogWarning("Kargo bulunamadı. TrackingNumber: {TrackingNumber}", request.TrackingNumber);
-                throw new NotFoundException("Takip numarası ile eşleşen kargo bulunamadı.");
+                _logger.LogWarning("Kargo bulunamadi. TrackingNumber: {TrackingNumber}", request.TrackingNumber);
+                throw new NotFoundException("Takip numarasi ile eslesen kargo bulunamadi.");
             }
 
             var sender = await _senderRepository.GetValueByExpressionAsync(s => s.Id == cargo.SenderId);
@@ -55,7 +59,7 @@ namespace KargoTakip.Application.Features.CargoMovement.Queries.TrackCargo
             {
                 TrackingNumber = cargo.TrackingNumber,
                 CurrentStatus = cargo.Status,
-                CurrentStatusText = GetStatusText(cargo.Status),
+                CurrentStatusText = _statusHelper.GetStatusMessage(cargo.Status),
                 CurrentLocation = latestMovement?.Location ?? "Bilgi yok",
                 Sender = sender != null ? new SenderInfo
                 {
@@ -73,28 +77,16 @@ namespace KargoTakip.Application.Features.CargoMovement.Queries.TrackCargo
                 Movements = movements.Select(m => new MovementInfo
                 {
                     Status = m.NewStatus,
-                    StatusText = GetStatusText(m.NewStatus),
+                    StatusText = _statusHelper.GetStatusMessage(m.NewStatus),
                     Location = m.Location,
                     Description = m.Description,
                     Date = m.CreatedDate
                 }).ToList()
             };
 
-            _logger.LogInformation("Kargo takip bilgileri getirildi. Hareket sayısı: {Count}", movements.Count);
+            _logger.LogInformation("Kargo takip bilgileri getirildi. Hareket sayisi: {Count}", movements.Count);
             return response;
         }
 
-        private string GetStatusText(CargoStatus status)
-        {
-            return status switch
-            {
-                CargoStatus.Received => "Teslim Alındı",
-                CargoStatus.InTransit => "Yolda",
-                CargoStatus.OutForDelivery => "Dağıtımda",
-                CargoStatus.Delivered => "Teslim Edildi",
-                CargoStatus.Undelivered => "Teslim Edilemedi",
-                _ => "Bilinmiyor"
-            };
-        }
     }
 }

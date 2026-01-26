@@ -23,13 +23,13 @@ namespace KargoTakip.Application.Features.Authentication.Commands.Register
 
         public async Task<RegisterCommandResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Yeni kullanıcı kaydı başlatılıyor: {Email}", request.Email);
+            _logger.LogInformation("Yeni kullanici kaydi baslatiliyor: {Email}", request.Email);
 
             var existingUser = await _userManager.FindByEmailAsync(request.Email);
             if (existingUser != null)
             {
-                _logger.LogWarning("Kullanıcı zaten mevcut: {Email}", request.Email);
-                throw new AuthenticationException("Bu email adresi zaten kullanılıyor.");
+                _logger.LogWarning("Kullanici zaten mevcut: {Email}", request.Email);
+                throw new AuthenticationException("Bu email adresi zaten kullaniliyor.");
             }
 
             var user = new ApplicationUser
@@ -48,16 +48,16 @@ namespace KargoTakip.Application.Features.Authentication.Commands.Register
             if (!result.Succeeded)
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                _logger.LogError("Kullanıcı kaydı başarısız: {Errors}", errors);
-                throw new AuthenticationException($"Kullanıcı kaydı başarısız: {errors}");
+                _logger.LogError("Kullanici kaydi basarisiz: {Errors}", errors);
+                throw new AuthenticationException($"Kullanici kaydi basarisiz: {errors}");
             }
 
-            _logger.LogInformation("Kullanıcı başarıyla kaydedildi: {Email}", request.Email);
+            _logger.LogInformation("Kullanici basariyla kaydedildi: {Email}", request.Email);
 
             return new RegisterCommandResponse
             {
                 Success = true,
-                Message = "Kullanıcı başarıyla kaydedildi.",
+                Message = "Kullanici basariyla kaydedildi.",
                 UserId = user.Id.ToString()
             };
         }

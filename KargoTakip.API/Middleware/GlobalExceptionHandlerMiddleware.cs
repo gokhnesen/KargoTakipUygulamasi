@@ -49,7 +49,7 @@ namespace KargoTakip.API.Middleware
                     context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                     response.StatusCode = (int)HttpStatusCode.Unauthorized;
                     response.Message = authenticationException.Message;
-                    _logger.LogWarning("Authentication hatası: {Message}", authenticationException.Message);
+                    _logger.LogWarning("Authentication hatasi: {Message}", authenticationException.Message);
                     break;
 
                 case NotFoundException notFoundException:

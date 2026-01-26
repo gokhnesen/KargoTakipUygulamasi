@@ -27,11 +27,11 @@ namespace KargoTakip.Infrastructure.Services
             try
             {
                 await _emailService.SendAsync(email, subject, body, body);
-                _logger.LogInformation("Email başarıyla gönderildi. Email: {Email}", email);
+                _logger.LogInformation("Email basariyla gonderildi. Email: {Email}", email);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Email gönderme hatası. Email: {Email}", email);
+                _logger.LogError(ex, "Email gonderme hatasi. Email: {Email}", email);
                 throw;
             }
         }
@@ -41,11 +41,11 @@ namespace KargoTakip.Infrastructure.Services
             try
             {
                 await _smsService.SendAsync(phoneNumber, message);
-                _logger.LogInformation("SMS başarıyla gönderildi. Telefon: {Phone}", phoneNumber);
+                _logger.LogInformation("SMS basariyla gonderildi. Telefon: {Phone}", phoneNumber);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "SMS gönderme hatası. Telefon: {Phone}", phoneNumber);
+                _logger.LogError(ex, "SMS gonderme hatasi. Telefon: {Phone}", phoneNumber);
                 throw;
             }
         }

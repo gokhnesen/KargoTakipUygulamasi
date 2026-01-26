@@ -35,7 +35,7 @@ namespace KargoTakip.Infrastructure.Services
 
             if (string.IsNullOrEmpty(_smtpUsername) || string.IsNullOrEmpty(_smtpPassword))
             {
-                _logger.LogWarning("Brevo SMTP bilgileri yap?land?r?lmam??!");
+                _logger.LogWarning("Brevo SMTP bilgileri yapilandirilmamis!");
             }
         }
 
@@ -43,7 +43,7 @@ namespace KargoTakip.Infrastructure.Services
         {
             if (string.IsNullOrEmpty(_smtpUsername) || string.IsNullOrEmpty(_smtpPassword))
             {
-                _logger.LogWarning("Brevo SMTP bilgileri bulunamad?. Email gönderilemiyor.");
+                _logger.LogWarning("Brevo SMTP bilgileri bulunamadi. Email gonderilemiyor.");
                 return;
             }
 
@@ -67,11 +67,11 @@ namespace KargoTakip.Infrastructure.Services
 
                 await smtpClient.SendMailAsync(mailMessage);
 
-                _logger.LogInformation("Email ba?ar?yla gönderildi. Al?c?: {Email}", email);
+                _logger.LogInformation("Email basariyla gonderildi. Alici: {Email}", email);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Email gönderme s?ras?nda hata olu?tu. Al?c?: {Email}", email);
+                _logger.LogError(ex, "Email gonderme sirasinda hata olustu. Alici: {Email}", email);
                 throw;
             }
         }

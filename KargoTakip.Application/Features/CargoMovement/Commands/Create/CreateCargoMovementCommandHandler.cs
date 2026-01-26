@@ -2,10 +2,10 @@
 using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.Cargo;
 using KargoTakip.Application.Interfaces.Notification;
+using KargoTakip.Application.Services;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,30 +18,36 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.Create
         private readonly IGenericRepository<Domain.Entities.CargoReceiver> _receiverRepository;
         private readonly INotificationService _notificationService;
         private readonly ILogger<CreateCargoMovementCommandHandler> _logger;
+        private readonly CargoStatusHelper _statusHelper;
+        private readonly EmailTemplateBuilder _emailTemplateBuilder;
 
         public CreateCargoMovementCommandHandler(
             IGenericRepository<Domain.Entities.CargoMovement> movementRepository,
             IGenericRepository<Domain.Entities.Cargo> cargoRepository,
             IGenericRepository<Domain.Entities.CargoReceiver> receiverRepository,
             INotificationService notificationService,
-            ILogger<CreateCargoMovementCommandHandler> logger)
+            ILogger<CreateCargoMovementCommandHandler> logger,
+            CargoStatusHelper statusHelper,
+            EmailTemplateBuilder emailTemplateBuilder)
         {
             _movementRepository = movementRepository;
             _cargoRepository = cargoRepository;
             _receiverRepository = receiverRepository;
             _notificationService = notificationService;
             _logger = logger;
+            _statusHelper = statusHelper;
+            _emailTemplateBuilder = emailTemplateBuilder;
         }
 
         public async Task<CreateCargoMovementCommandResponse> Handle(CreateCargoMovementCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Yeni kargo hareketi oluşturuluyor. CargoId: {CargoId}", request.CargoId);
+            _logger.LogInformation("Yeni kargo hareketi olusturuluyor. CargoId: {CargoId}", request.CargoId);
 
             var cargo = await _cargoRepository.GetValueByExpressionAsync(c => c.Id == request.CargoId);
             if (cargo == null)
             {
-                _logger.LogError("Kargo bulunamadı. CargoId: {CargoId}", request.CargoId);
-                throw new BusinessException("Kargo bulunamadı.");
+                _logger.LogError("Kargo bulunamadi. CargoId: {CargoId}", request.CargoId);
+                throw new BusinessException("Kargo bulunamadi.");
             }
 
             var movement = new Domain.Entities.CargoMovement
@@ -89,55 +95,25 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.Create
                 var receiver = await _receiverRepository.GetValueByExpressionAsync(r => r.Id == cargo.ReceiverId);
                 if (receiver == null)
                 {
-                    _logger.LogWarning("Alıcı bilgisi bulunamadı. ReceiverId: {ReceiverId}", cargo.ReceiverId);
+                    _logger.LogWarning("Alici bilgisi bulunamadi. ReceiverId: {ReceiverId}", cargo.ReceiverId);
                     return false;
                 }
 
-                var statusMessage = GetStatusMessage(request.NewStatus);
-                var emailSubject = $"Kargo Durum Güncellesi - {cargo.TrackingNumber}";
-                var emailBody = BuildEmailBody(receiver, cargo, request, statusMessage);
+                var statusMessage = _statusHelper.GetStatusMessage(request.NewStatus);
+                var emailSubject = $"Kargo Durum Guncellemesi - {cargo.TrackingNumber}";
+                var emailBody = _emailTemplateBuilder.BuildCargoStatusUpdateEmail(
+                    receiver, cargo, statusMessage, request.Location, request.Description);
 
                 await _notificationService.SendEmailAsync(receiver.Email, emailSubject, emailBody);
-                _logger.LogInformation("Email gönderildi. Email: {Email}", receiver.Email);
+                _logger.LogInformation("Email gonderildi. Email: {Email}", receiver.Email);
 
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Bildirim gönderilirken hata oluştu. CargoId: {CargoId}", cargo.Id);
+                _logger.LogError(ex, "Bildirim gonderilirken hata olustu. CargoId: {CargoId}", cargo.Id);
                 return false;
             }
-        }
-
-        private string GetStatusMessage(Domain.Enums.CargoStatus status)
-        {
-            return status switch
-            {
-                Domain.Enums.CargoStatus.Received => "teslim alındı",
-                Domain.Enums.CargoStatus.InTransit => "yolda",
-                Domain.Enums.CargoStatus.OutForDelivery => "dağıtımda",
-                Domain.Enums.CargoStatus.Delivered => "teslim edildi",
-                Domain.Enums.CargoStatus.Undelivered => "teslim edilemedi",
-                _ => "güncellendi"
-            };
-        }
-
-        private string BuildEmailBody(Domain.Entities.CargoReceiver receiver, Domain.Entities.Cargo cargo, CreateCargoMovementCommand request, string statusMessage)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine($"<html><body>");
-            sb.AppendLine($"<h2>Merhaba {receiver.Name} {receiver.Surname},</h2>");
-            sb.AppendLine($"<p>Takip numarası <strong>{cargo.TrackingNumber}</strong> olan kargonuzun durumu güncellendi.</p>");
-            sb.AppendLine($"<hr/>");
-            sb.AppendLine($"<p><strong>Yeni Durum:</strong> {statusMessage}</p>");
-            sb.AppendLine($"<p><strong>Konum:</strong> {request.Location}</p>");
-            sb.AppendLine($"<p><strong>Açıklama:</strong> {request.Description}</p>");
-            sb.AppendLine($"<p><strong>Güncelleme Tarihi:</strong> {DateTime.Now:dd.MM.yyyy HH:mm}</p>");
-            sb.AppendLine($"<hr/>");
-            sb.AppendLine($"<p>Kargonuzu takip etmek için takip numaranızı kullanabilirsiniz.</p>");
-            sb.AppendLine($"<p>İyi günler dileriz.</p>");
-            sb.AppendLine($"</body></html>");
-            return sb.ToString();
         }
     }
 }
