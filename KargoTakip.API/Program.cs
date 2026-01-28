@@ -1,7 +1,8 @@
-﻿using KargoTakip.API.Middleware;
+using KargoTakip.API.Middleware;
 using KargoTakip.Application;
 using KargoTakip.Infrastructure;
 using KargoTakip.Persistence;
+using KargoTakip.Persistence.Utilities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -93,12 +94,15 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+
+
 app.MapDefaultEndpoints();
 app.UseSerilogRequestLogging();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
 
     app.UseSwaggerUI(c =>

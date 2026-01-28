@@ -1,4 +1,4 @@
-﻿using KargoTakip.Application.Interfaces;
+using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.Cargo;
 using KargoTakip.Application.Interfaces.CargoMovement;
 using KargoTakip.Domain.Entities;
@@ -7,6 +7,7 @@ using KargoTakip.Persistence.Repositories;
 using KargoTakip.Persistence.Repositories.Cargo;
 using KargoTakip.Persistence.Repositories.CargoMovementRepository;
 using KargoTakip.Persistence.Services;
+using KargoTakip.Persistence.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -46,7 +47,7 @@ namespace KargoTakip.Persistence
             services.AddScoped<ICargoRepository, CargoRepository>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<ICargoMovementRepository, CargoMovementRepository>();
-
+            services.AddScoped<DataSeeder>();
 
             return services;
         }

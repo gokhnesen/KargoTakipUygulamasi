@@ -22,7 +22,10 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
         
         // Paging parameters
         public int PageIndex { get; set; } = 1;
-        public int PageSize { get; set; } = 0; // 0 means no paging
+        public int PageSize { get; set; } = 50; // sensible default to prevent huge responses
+
+        // Include options
+        public bool IncludeMovements { get; set; } = false;
 
         // Helper property to convert int to CargoStatus
         public CargoStatus? GetCargoStatus() 

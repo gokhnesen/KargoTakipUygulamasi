@@ -1,4 +1,4 @@
-﻿using KargoTakip.Application.Dtos;
+using KargoTakip.Application.Dtos;
 using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.Cargo;
 using KargoTakip.Application.Services;
@@ -35,6 +35,11 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
             _logger.LogInformation("Tum kargolar listeleniyor. Filtreler: Status={Status}, TrackingNumber={TrackingNumber}, Email={Email}, Page={Page}", 
                 request.Status, request.TrackingNumber, request.ReceiverEmail, request.PageIndex);
 
+            var pageIndex = request.PageIndex < 1 ? 1 : request.PageIndex;
+            var pageSize = request.PageSize <= 0 ? 50 : request.PageSize;
+            // Hard cap to protect API from accidental huge responses
+            pageSize = pageSize > 500 ? 500 : pageSize;
+
             var filterParams = new CargoFilterParams
             {
                 Status = request.GetCargoStatus(),
@@ -46,8 +51,9 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
                 EndDate = request.EndDate,
                 OrderBy = request.OrderBy,
                 IsDescending = request.IsDescending,
-                PageIndex = request.PageIndex,
-                PageSize = request.PageSize
+                PageIndex = pageIndex,
+                PageSize = pageSize,
+                IncludeMovements = request.IncludeMovements
             };
 
             var spec = new CargoFilterSpecification(filterParams);
@@ -66,7 +72,8 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
                 ReceiverEmail = request.ReceiverEmail,
                 StartDate = request.StartDate,
                 EndDate = request.EndDate,
-                PageSize = 0 
+                PageSize = 0,
+                IncludeMovements = false
             });
             var totalCount = await _cargoRepository.CountAsync(countSpec);
 
@@ -100,14 +107,16 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
                 Status = c.Status,
                 CreatedDate = c.CreatedDate,
                 UpdatedDate = c.UpdatedDate,
-                Movements = c.Movements?.OrderByDescending(m => m.CreatedDate).Select(m => new CargoMovementDto
-                {
-                    Id = m.Id,
-                    NewStatus = m.NewStatus,
-                    Location = m.Location,
-                    Description = m.Description,
-                    CreatedDate = m.CreatedDate
-                }).ToList() ?? new List<CargoMovementDto>()
+                Movements = request.IncludeMovements
+                    ? (c.Movements?.OrderByDescending(m => m.CreatedDate).Select(m => new CargoMovementDto
+                        {
+                            Id = m.Id,
+                            NewStatus = m.NewStatus,
+                            Location = m.Location,
+                            Description = m.Description,
+                            CreatedDate = m.CreatedDate
+                        }).ToList() ?? new List<CargoMovementDto>())
+                    : new List<CargoMovementDto>()
             }).ToList();
 
             _logger.LogInformation("{Count} adet kargo basariyla listelendi.", response.Count);
@@ -116,8 +125,8 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
             {
                 Items = response,
                 TotalCount = totalCount,
-                PageIndex = request.PageIndex,
-                PageSize = request.PageSize
+                PageIndex = pageIndex,
+                PageSize = pageSize
             };
         }
     }

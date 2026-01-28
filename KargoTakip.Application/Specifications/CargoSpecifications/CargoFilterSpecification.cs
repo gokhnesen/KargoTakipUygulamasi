@@ -12,7 +12,10 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
         {
             AddInclude(c => c.Sender);
             AddInclude(c => c.Receiver);
-            AddInclude(c => c.Movements);
+            if (filterParams.IncludeMovements)
+            {
+                AddInclude(c => c.Movements);
+            }
 
             if (!string.IsNullOrEmpty(filterParams.OrderBy))
             {
@@ -158,6 +161,7 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
         public string OrderBy { get; set; } = "date";
         public bool IsDescending { get; set; } = true;
         public int PageIndex { get; set; } = 1;
-        public int PageSize { get; set; } = 0; // 0 = no paging
+        public int PageSize { get; set; } = 500;
+        public bool IncludeMovements { get; set; } = false;
     }
 }
