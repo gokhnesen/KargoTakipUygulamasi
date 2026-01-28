@@ -24,6 +24,15 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
         public int PageIndex { get; set; } = 1;
         public int PageSize { get; set; } = 50; // sensible default to prevent huge responses
 
+        // Keyset (cursor) pagination (recommended for big datasets)
+        // Works best with OrderBy=date because it uses (CreatedDate, Id) as a stable cursor.
+        public bool UseKeysetPagination { get; set; } = false;
+        public DateTime? CursorCreatedDate { get; set; }
+        public string? CursorId { get; set; }
+
+        // TotalCount requires COUNT(*) and can be expensive on very large tables.
+        public bool IncludeTotalCount { get; set; } = true;
+
         // Include options
         public bool IncludeMovements { get; set; } = false;
 
@@ -38,6 +47,9 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
         public int TotalCount { get; set; }
         public int PageIndex { get; set; }
         public int PageSize { get; set; }
-        public int TotalPages => PageSize > 0 ? (int)Math.Ceiling(TotalCount / (double)PageSize) : 1;
+        public bool HasMore { get; set; }
+        public DateTime? NextCursorCreatedDate { get; set; }
+        public string? NextCursorId { get; set; }
+        public int TotalPages => TotalCount < 0 || PageSize <= 0 ? 1 : (int)Math.Ceiling(TotalCount / (double)PageSize);
     }
 }

@@ -40,6 +40,10 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
             // Hard cap to protect API from accidental huge responses
             pageSize = pageSize > 500 ? 500 : pageSize;
 
+            var normalizedOrderBy = string.IsNullOrWhiteSpace(request.OrderBy) ? "date" : request.OrderBy.Trim();
+            var useKeyset = request.UseKeysetPagination &&
+                            string.Equals(normalizedOrderBy, "date", System.StringComparison.OrdinalIgnoreCase);
+
             var filterParams = new CargoFilterParams
             {
                 Status = request.GetCargoStatus(),
@@ -49,11 +53,15 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
                 ReceiverEmail = request.ReceiverEmail,
                 StartDate = request.StartDate,
                 EndDate = request.EndDate,
-                OrderBy = request.OrderBy,
+                OrderBy = normalizedOrderBy,
                 IsDescending = request.IsDescending,
-                PageIndex = pageIndex,
-                PageSize = pageSize,
-                IncludeMovements = request.IncludeMovements
+                PageIndex = useKeyset ? 1 : pageIndex,
+                // For keyset we fetch 1 extra row to compute HasMore
+                PageSize = useKeyset ? (pageSize + 1) : pageSize,
+                IncludeMovements = request.IncludeMovements,
+                UseKeysetPagination = useKeyset,
+                CursorCreatedDate = request.CursorCreatedDate,
+                CursorId = request.CursorId
             };
 
             var spec = new CargoFilterSpecification(filterParams);
@@ -63,19 +71,24 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
             
             
             
-            var countSpec = new CargoFilterSpecification(new CargoFilterParams
+            var totalCount = -1;
+            if (request.IncludeTotalCount && !useKeyset)
             {
-                Status = request.GetCargoStatus(),
-                TrackingNumber = request.TrackingNumber,
-                SenderName = request.SenderName,
-                ReceiverName = request.ReceiverName,
-                ReceiverEmail = request.ReceiverEmail,
-                StartDate = request.StartDate,
-                EndDate = request.EndDate,
-                PageSize = 0,
-                IncludeMovements = false
-            });
-            var totalCount = await _cargoRepository.CountAsync(countSpec);
+                var countSpec = new CargoFilterSpecification(new CargoFilterParams
+                {
+                    Status = request.GetCargoStatus(),
+                    TrackingNumber = request.TrackingNumber,
+                    SenderName = request.SenderName,
+                    ReceiverName = request.ReceiverName,
+                    ReceiverEmail = request.ReceiverEmail,
+                    StartDate = request.StartDate,
+                    EndDate = request.EndDate,
+                    PageSize = 0,
+                    IncludeMovements = false,
+                    UseKeysetPagination = false
+                });
+                totalCount = await _cargoRepository.CountAsync(countSpec);
+            }
 
             _logger.LogInformation("Veritabanindan {Count} adet kargo getirildi (Toplam: {TotalCount}).", cargos?.Count ?? 0, totalCount);
 
@@ -86,10 +99,20 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
                 return new GetAllCargosQueryResult
                 {
                     Items = new List<GetAllCargosQueryResponse>(),
-                    TotalCount = 0,
-                    PageIndex = request.PageIndex,
-                    PageSize = request.PageSize
+                    TotalCount = request.IncludeTotalCount && !useKeyset ? 0 : -1,
+                    PageIndex = useKeyset ? 1 : pageIndex,
+                    PageSize = pageSize,
+                    HasMore = false,
+                    NextCursorCreatedDate = null,
+                    NextCursorId = null
                 };
+            }
+
+            bool hasMore = false;
+            if (useKeyset && cargos.Count > pageSize)
+            {
+                hasMore = true;
+                cargos = cargos.Take(pageSize).ToList();
             }
 
             var response = cargos.Select(c => new GetAllCargosQueryResponse
@@ -121,12 +144,24 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
 
             _logger.LogInformation("{Count} adet kargo basariyla listelendi.", response.Count);
 
+            DateTime? nextCursorCreatedDate = null;
+            string? nextCursorId = null;
+            if (useKeyset && response.Count > 0)
+            {
+                var last = response[^1];
+                nextCursorCreatedDate = last.CreatedDate;
+                nextCursorId = last.Id;
+            }
+
             return new GetAllCargosQueryResult
             {
                 Items = response,
-                TotalCount = totalCount,
-                PageIndex = pageIndex,
-                PageSize = pageSize
+                TotalCount = request.IncludeTotalCount && !useKeyset ? totalCount : -1,
+                PageIndex = useKeyset ? 1 : pageIndex,
+                PageSize = pageSize,
+                HasMore = hasMore,
+                NextCursorCreatedDate = nextCursorCreatedDate,
+                NextCursorId = nextCursorId
             };
         }
     }

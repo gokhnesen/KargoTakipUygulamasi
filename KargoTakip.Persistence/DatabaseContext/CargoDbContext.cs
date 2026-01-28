@@ -1,4 +1,4 @@
-﻿using KargoTakip.Domain.Entities;
+using KargoTakip.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +38,38 @@ namespace KargoTakip.Persistence.DatabaseContext
                 .WithMany()
                 .HasForeignKey(c => c.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Cargo>(entity =>
+            {
+                entity.Property(c => c.TrackingNumber).HasMaxLength(64);
+
+                entity.HasIndex(c => new { c.CreatedDate, c.Id })
+                      .HasDatabaseName("IX_Cargos_CreatedDate_Id")
+                      .HasFilter("[IsDeleted] = 0");
+
+                entity.HasIndex(c => c.TrackingNumber)
+                      .HasDatabaseName("IX_Cargos_TrackingNumber")
+                      .HasFilter("[IsDeleted] = 0");
+
+                entity.HasIndex(c => new { c.Status, c.CreatedDate, c.Id })
+                      .HasDatabaseName("IX_Cargos_Status_CreatedDate_Id")
+                      .HasFilter("[IsDeleted] = 0");
+            });
+
+            modelBuilder.Entity<CargoMovement>(entity =>
+            {
+                entity.HasIndex(m => new { m.CargoId, m.CreatedDate, m.Id })
+                      .HasDatabaseName("IX_CargoMovements_CargoId_CreatedDate_Id")
+                      .HasFilter("[IsDeleted] = 0");
+            });
+
+            modelBuilder.Entity<CargoReceiver>(entity =>
+            {
+                entity.Property(r => r.Email).HasMaxLength(256);
+                entity.HasIndex(r => r.Email)
+                      .HasDatabaseName("IX_CargoReceivers_Email")
+                      .HasFilter("[IsDeleted] = 0");
+            });
 
             base.OnModelCreating(modelBuilder);
         }

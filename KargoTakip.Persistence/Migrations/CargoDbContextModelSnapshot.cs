@@ -126,7 +126,8 @@ namespace KargoTakip.Persistence.Migrations
 
                     b.Property<string>("TrackingNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime2");
@@ -136,6 +137,18 @@ namespace KargoTakip.Persistence.Migrations
                     b.HasIndex("ReceiverId");
 
                     b.HasIndex("SenderId");
+
+                    b.HasIndex("TrackingNumber")
+                        .HasDatabaseName("IX_Cargos_TrackingNumber")
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("CreatedDate", "Id")
+                        .HasDatabaseName("IX_Cargos_CreatedDate_Id")
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("Status", "CreatedDate", "Id")
+                        .HasDatabaseName("IX_Cargos_Status_CreatedDate_Id")
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("Cargos");
                 });
@@ -171,7 +184,9 @@ namespace KargoTakip.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CargoId");
+                    b.HasIndex("CargoId", "CreatedDate", "Id")
+                        .HasDatabaseName("IX_CargoMovements_CargoId_CreatedDate_Id")
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("CargoMovements");
                 });
@@ -186,7 +201,8 @@ namespace KargoTakip.Persistence.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("FullAddress")
                         .IsRequired()
@@ -211,6 +227,10 @@ namespace KargoTakip.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .HasDatabaseName("IX_CargoReceivers_Email")
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("CargoReceivers");
                 });

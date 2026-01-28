@@ -20,14 +20,34 @@ namespace KargoTakip.Persistence.Repositories
             // Apply includes (JOIN)
             query = spec.Includes.Aggregate(query, (current, include) => current.Include(include));
 
+            // For collection includes, split query often avoids cartesian explosion
+            if (spec.IsSplitQuery)
+            {
+                query = query.AsSplitQuery();
+            }
+
             // Apply ordering
             if (spec.OrderBy != null)
             {
-                query = query.OrderBy(spec.OrderBy);
+                var orderedQuery = query.OrderBy(spec.OrderBy);
+
+                if (spec.ThenBy != null)
+                    orderedQuery = orderedQuery.ThenBy(spec.ThenBy);
+                else if (spec.ThenByDescending != null)
+                    orderedQuery = orderedQuery.ThenByDescending(spec.ThenByDescending);
+
+                query = orderedQuery;
             }
             else if (spec.OrderByDescending != null)
             {
-                query = query.OrderByDescending(spec.OrderByDescending);
+                var orderedQuery = query.OrderByDescending(spec.OrderByDescending);
+
+                if (spec.ThenBy != null)
+                    orderedQuery = orderedQuery.ThenBy(spec.ThenBy);
+                else if (spec.ThenByDescending != null)
+                    orderedQuery = orderedQuery.ThenByDescending(spec.ThenByDescending);
+
+                query = orderedQuery;
             }
 
             // Apply paging

@@ -15,6 +15,8 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
             if (filterParams.IncludeMovements)
             {
                 AddInclude(c => c.Movements);
+                // Collection include: prefer split query to avoid cartesian explosion
+                ApplySplitQuery();
             }
 
             if (!string.IsNullOrEmpty(filterParams.OrderBy))
@@ -23,36 +25,64 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
                 {
                     case "date":
                         if (filterParams.IsDescending)
+                        {
                             ApplyOrderByDescending(c => c.CreatedDate);
+                            ApplyThenByDescending(c => c.Id);
+                        }
                         else
+                        {
                             ApplyOrderBy(c => c.CreatedDate);
+                            ApplyThenBy(c => c.Id);
+                        }
                         break;
                     case "trackingnumber":
                         if (filterParams.IsDescending)
+                        {
                             ApplyOrderByDescending(c => c.TrackingNumber);
+                            ApplyThenByDescending(c => c.Id);
+                        }
                         else
+                        {
                             ApplyOrderBy(c => c.TrackingNumber);
+                            ApplyThenBy(c => c.Id);
+                        }
                         break;
                     case "status":
                         if (filterParams.IsDescending)
+                        {
                             ApplyOrderByDescending(c => c.Status);
+                            ApplyThenByDescending(c => c.CreatedDate);
+                        }
                         else
+                        {
                             ApplyOrderBy(c => c.Status);
+                            ApplyThenBy(c => c.CreatedDate);
+                        }
                         break;
                     default:
                         ApplyOrderByDescending(c => c.CreatedDate);
+                        ApplyThenByDescending(c => c.Id);
                         break;
                 }
             }
             else
             {
                 ApplyOrderByDescending(c => c.CreatedDate);
+                ApplyThenByDescending(c => c.Id);
             }
 
             // Paging
             if (filterParams.PageSize > 0)
             {
-                ApplyPaging(filterParams.PageSize * (filterParams.PageIndex - 1), filterParams.PageSize);
+                if (filterParams.UseKeysetPagination)
+                {
+                    // Keyset pagination doesn't use Skip; filtering is in criteria
+                    ApplyPaging(0, filterParams.PageSize);
+                }
+                else
+                {
+                    ApplyPaging(filterParams.PageSize * (filterParams.PageIndex - 1), filterParams.PageSize);
+                }
             }
         }
 
@@ -113,6 +143,30 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
                 criteria = CombineExpressions(criteria, c => c.CreatedDate <= endDate);
             }
 
+            // Keyset pagination filter for "date" ordering
+            // Uses stable cursor: (CreatedDate, Id)
+            if (filterParams.UseKeysetPagination
+                && filterParams.CursorCreatedDate.HasValue
+                && !string.IsNullOrEmpty(filterParams.CursorId)
+                && string.Equals(filterParams.OrderBy, "date", StringComparison.OrdinalIgnoreCase))
+            {
+                var cursorDate = filterParams.CursorCreatedDate.Value;
+                var cursorId = filterParams.CursorId;
+
+                if (filterParams.IsDescending)
+                {
+                    criteria = CombineExpressions(criteria, c =>
+                        c.CreatedDate < cursorDate ||
+                        (c.CreatedDate == cursorDate && string.Compare(c.Id, cursorId) < 0));
+                }
+                else
+                {
+                    criteria = CombineExpressions(criteria, c =>
+                        c.CreatedDate > cursorDate ||
+                        (c.CreatedDate == cursorDate && string.Compare(c.Id, cursorId) > 0));
+                }
+            }
+
             return criteria;
         }
 
@@ -128,7 +182,7 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
             var rightVisitor = new ReplaceExpressionVisitor(second.Parameters[0], parameter);
             var right = rightVisitor.Visit(second.Body);
 
-            return Expression.Lambda<Func<T, bool>>(Expression.AndAlso(left, right), parameter);
+            return Expression.Lambda<Func<T, bool>>(Expression.AndAlso(left!, right!), parameter);
         }
     }
 
@@ -143,7 +197,7 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
             _newValue = newValue;
         }
 
-        public override Expression Visit(Expression node)
+        public override Expression? Visit(Expression? node)
         {
             return node == _oldValue ? _newValue : base.Visit(node);
         }
@@ -152,16 +206,19 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
     public class CargoFilterParams
     {
         public CargoStatus? Status { get; set; }
-        public string TrackingNumber { get; set; }
-        public string SenderName { get; set; }
-        public string ReceiverName { get; set; }
-        public string ReceiverEmail { get; set; }
+        public string? TrackingNumber { get; set; }
+        public string? SenderName { get; set; }
+        public string? ReceiverName { get; set; }
+        public string? ReceiverEmail { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string OrderBy { get; set; } = "date";
         public bool IsDescending { get; set; } = true;
         public int PageIndex { get; set; } = 1;
-        public int PageSize { get; set; } = 500;
+        public int PageSize { get; set; } = 50;
         public bool IncludeMovements { get; set; } = false;
+        public bool UseKeysetPagination { get; set; } = false;
+        public DateTime? CursorCreatedDate { get; set; }
+        public string? CursorId { get; set; }
     }
 }

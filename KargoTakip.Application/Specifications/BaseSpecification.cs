@@ -19,6 +19,9 @@ namespace KargoTakip.Application.Specifications
         public List<Expression<Func<T, object>>> Includes { get; } = new List<Expression<Func<T, object>>>();
         public Expression<Func<T, object>> OrderBy { get; private set; }
         public Expression<Func<T, object>> OrderByDescending { get; private set; }
+        public Expression<Func<T, object>> ThenBy { get; private set; }
+        public Expression<Func<T, object>> ThenByDescending { get; private set; }
+        public bool IsSplitQuery { get; private set; }
         public int Take { get; private set; }
         public int Skip { get; private set; }
         public bool IsPagingEnabled { get; private set; }
@@ -36,6 +39,21 @@ namespace KargoTakip.Application.Specifications
         protected void ApplyOrderByDescending(Expression<Func<T, object>> orderByDescExpression)
         {
             OrderByDescending = orderByDescExpression;
+        }
+
+        protected void ApplyThenBy(Expression<Func<T, object>> thenByExpression)
+        {
+            ThenBy = thenByExpression;
+        }
+
+        protected void ApplyThenByDescending(Expression<Func<T, object>> thenByDescExpression)
+        {
+            ThenByDescending = thenByDescExpression;
+        }
+
+        protected void ApplySplitQuery()
+        {
+            IsSplitQuery = true;
         }
 
         protected void ApplyPaging(int skip, int take)
