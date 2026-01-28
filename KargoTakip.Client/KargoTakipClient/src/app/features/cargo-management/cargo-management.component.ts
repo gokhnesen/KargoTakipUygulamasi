@@ -221,7 +221,19 @@ export class CargoManagementComponent implements OnInit {
     this.validationError = null;
     this.creating = true;
 
-    this.cargoService.create(this.createForm).subscribe({
+    // Construct the payload to match API expectations
+    const payload = {
+      senderFullName: this.createForm.senderName,
+      senderAddress: this.createForm.senderAddress,
+      senderPhoneNumber: this.createForm.senderPhoneNumber,
+      receiverName: this.createForm.receiverName,
+      receiverSurname: this.createForm.receiverSurname,
+      receiverAddress: this.createForm.receiverAddress,
+      receiverPhoneNumber: this.createForm.receiverPhoneNumber,
+      receiverEmail: this.createForm.receiverEmail
+    };
+
+    this.cargoService.create(payload).subscribe({
       next: () => {
         this.creating = false;
         this.successMessage = 'Kargo başarıyla oluşturuldu!';

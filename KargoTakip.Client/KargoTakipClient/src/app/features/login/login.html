@@ -1,41 +1,160 @@
-<div class="login-container">
-  <div class="login-box">
-    <h2>Giriş Yap</h2>
-    <form (ngSubmit)="login()">
-      <div class="form-group">
-        <label>E-posta</label>
-        <input 
-          type="email" 
-          [(ngModel)]="email" 
-          name="email"
-          placeholder="ornek@email.com"
-          required
-          [disabled]="loading"
-        />
-      </div>
-      <div class="form-group">
-        <label>Şifre</label>
-        <input 
-          type="password" 
-          [(ngModel)]="password"
-          name="password"
-          placeholder="********"
-          required
-          [disabled]="loading"
-        />
+<div class="login-page">
+  <!-- Left Section - Branding -->
+  <div class="login-left">
+    <div class="branding-content">
+      <div class="logo-section">
+        <svg width="60" height="60" viewBox="0 0 40 40" fill="none">
+          <path d="M20 5L35 12.5V27.5L20 35L5 27.5V12.5L20 5Z" stroke="white" stroke-width="2" fill="none"/>
+          <path d="M20 15L28 19V25L20 29L12 25V19L20 15Z" fill="white"/>
+        </svg>
+        <h1>KargoTrack</h1>
       </div>
       
-      <div *ngIf="error" class="error-message">
-        {{ error }}
+      <div class="welcome-text">
+        <h2>Kurumsal Kargo Yönetim Sistemi</h2>
+        <p>Yetkilendirilmiş personel girişi. Lütfen kurumsal hesap bilgilerinizle giriş yapınız.</p>
+      </div>
+      
+      <div class="features-list">
+        <div class="feature-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2"/>
+            <path d="M8 12L11 15L16 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Merkezi kargo operasyon yönetimi</span>
+        </div>
+        <div class="feature-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2"/>
+            <path d="M8 12L11 15L16 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Gelişmiş raporlama ve analiz araçları</span>
+        </div>
+        <div class="feature-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2"/>
+            <path d="M8 12L11 15L16 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Rol tabanlı erişim ve güvenlik</span>
+        </div>
+      </div>
+      
+      <div class="stats-mini">
+        <div class="stat-mini">
+          <div class="stat-mini-number">500+</div>
+          <div class="stat-mini-label">Aktif Şube</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-number">50K+</div>
+          <div class="stat-mini-label">Günlük Teslimat</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-number">7/24</div>
+          <div class="stat-mini-label">Sistem Erişimi</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Section - Login Form -->
+  <div class="login-right">
+    <div class="login-form-container">
+      <div class="form-header">
+        <h2>Personel Girişi</h2>
+        <p>Kurumsal hesabınızla sisteme giriş yapın</p>
       </div>
 
-      <button type="submit" class="submit-btn" [disabled]="loading">
-        <span *ngIf="!loading">Giriş Yap</span>
-        <span *ngIf="loading">Giriş yapılıyor...</span>
-      </button>
-      <button type="button" class="back-btn" (click)="goBack()" [disabled]="loading">
-        Ana Sayfaya Dön
-      </button>
-    </form>
+      <form (ngSubmit)="login()" class="login-form">
+        <div class="form-group">
+          <label for="email">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" stroke-width="2"/>
+              <path d="M22 6L12 13L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            E-posta Adresi
+          </label>
+          <div class="input-wrapper">
+            <input 
+              id="email"
+              type="email" 
+              [(ngModel)]="email" 
+              name="email"
+              placeholder="ornek@email.com"
+              required
+              [disabled]="loading"
+              class="form-input"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="2"/>
+              <path d="M7 11V7C7 4.79086 8.79086 3 11 3H13C15.2091 3 17 4.79086 17 7V11" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Şifre
+          </label>
+          <div class="input-wrapper">
+            <input 
+              id="password"
+              type="password" 
+              [(ngModel)]="password"
+              name="password"
+              placeholder="••••••••"
+              required
+              [disabled]="loading"
+              class="form-input"
+            />
+          </div>
+        </div>
+
+        <div class="form-options">
+          <label class="remember-me">
+            <input type="checkbox" />
+            <span>Bu cihazda oturumumu açık tut</span>
+          </label>
+          <a href="#" class="forgot-password">Şifre sıfırlama talebi</a>
+        </div>
+
+        <div *ngIf="error" class="error-message">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z"/>
+          </svg>
+          {{ error }}
+        </div>
+
+        <button type="submit" class="submit-btn" [disabled]="loading">
+          <span *ngIf="!loading">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M15 3H19C20.1 3 21 3.9 21 5V19C21 20.1 20.1 21 19 21H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M10 17L15 12L10 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M15 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Giriş Yap
+          </span>
+          <span *ngIf="loading" class="loading-spinner">
+            <svg class="spinner" width="20" height="20" viewBox="0 0 20 20">
+              <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="50" stroke-dashoffset="0"/>
+            </svg>
+            Giriş yapılıyor...
+          </span>
+        </button>
+
+        <button type="button" class="back-btn" (click)="goBack()" [disabled]="loading">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Ana Sayfaya Dön
+        </button>
+      </form>
+
+      <div class="form-footer">
+        <p>Erişim sorunu mu yaşıyorsunuz? <a href="#">IT Destek</a> ile iletişime geçin</p>
+        <div class="corporate-info">
+          <small>© 2026 KargoTrack - Kurumsal Portal</small>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

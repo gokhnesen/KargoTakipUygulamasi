@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Cargo } from '../../shared/Cargo';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { CargoMovement } from '../../shared/CargoMovement';
 import { CargoStatus } from '../../shared/CargoStatus';
 
@@ -23,7 +23,9 @@ export class CargoServices {
   }
 
   getAll(): Observable<Cargo[]> {
-    return this.http.get<Cargo[]>(`${this.baseUrl}`);
+    return this.http.get<any>(`${this.baseUrl}`).pipe(
+      map(response => response.items || response)
+    );
   }
 
   createMovement(movement: Partial<CargoMovement>): Observable<CargoMovement> {

@@ -17,9 +17,9 @@ namespace KargoTakip.Infrastructure
             var useBrevo = configuration.GetValue<bool>("Brevo:Enabled", false);
 
             services.AddScoped<IEmailService, BrevoEmailService>();
-            
-
+            services.AddScoped<ISmsService, DummySmsService>();
             services.AddScoped<INotificationService, NotificationService>();
+            
             return services;
         }
     }
