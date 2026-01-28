@@ -134,9 +134,17 @@ namespace KargoTakip.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ReceiverId");
+                    b.HasIndex("ReceiverId")
+                        .HasDatabaseName("IX_Cargos_ReceiverId")
+                        .HasFilter("[IsDeleted] = 0");
 
-                    b.HasIndex("SenderId");
+                    b.HasIndex("SenderId")
+                        .HasDatabaseName("IX_Cargos_SenderId")
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_Cargos_Status")
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.HasIndex("TrackingNumber")
                         .HasDatabaseName("IX_Cargos_TrackingNumber")

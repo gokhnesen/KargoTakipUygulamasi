@@ -33,13 +33,21 @@ namespace KargoTakip.Persistence.Repositories.Cargo
 
         public async Task<Domain.Entities.Cargo> GetCargoByIdWithDetailsAsync(string id)
         {
-            return await _context.Cargos
+            var cargo = await _context.Cargos
                 .Include(c => c.Sender)
                 .Include(c => c.Receiver)
-                .Include(c => c.Movements.OrderByDescending(m => m.CreatedDate))
+                .Include(c => c.Movements)
                 .Where(c => c.Id == id && !c.IsDeleted)
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
+
+            // Order movements in memory after fetching
+            if (cargo?.Movements != null)
+            {
+                cargo.Movements = cargo.Movements.OrderByDescending(m => m.CreatedDate).ToList();
+            }
+
+            return cargo;
         }
     }
 }

@@ -20,7 +20,7 @@ namespace KargoTakip.Application.Features.Cargo.Commands.Create
 
             RuleFor(x => x.SenderPhoneNumber)
                 .NotEmpty().WithMessage("Gönderen kişinin telefon numarası boş bırakılamaz.")
-                .Matches(@"^[0-9]{10,15}$").WithMessage("Telefon numarası 10-15 rakam arasında olmalıdır.");
+                .Matches(@"^(\+90|0)?[0-9]{10}$").WithMessage("Geçerli bir telefon numarası giriniz (örn: 05551234567 veya +905551234567).");
 
             RuleFor(x => x.ReceiverName)
                 .NotEmpty().WithMessage("Alıcı kişinin adı boş bırakılamaz.")
@@ -37,7 +37,7 @@ namespace KargoTakip.Application.Features.Cargo.Commands.Create
 
             RuleFor(x => x.ReceiverPhoneNumber)
                 .NotEmpty().WithMessage("Alıcı kişinin telefon numarası boş bırakılamaz.")
-                .Matches(@"^[0-9]{10,15}$").WithMessage("Telefon numarası 10-15 rakam arasında olmalıdır.");
+                .Matches(@"^(\+90|0)?[0-9]{10}$").WithMessage("Geçerli bir telefon numarası giriniz (örn: 05551234567 veya +905551234567).");
 
             RuleFor(x => x.ReceiverEmail)
                 .NotEmpty().WithMessage("Alıcı kişinin e-posta adresi boş bırakılamaz.")

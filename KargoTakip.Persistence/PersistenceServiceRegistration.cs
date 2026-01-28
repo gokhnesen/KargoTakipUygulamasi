@@ -38,7 +38,7 @@ namespace KargoTakip.Persistence
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
             })
-                .AddRoles<IdentityRole<Guid>>() 
+                .AddRoles<IdentityRole<Guid>>()
                 .AddEntityFrameworkStores<CargoDbContext>()
                 .AddDefaultTokenProviders();
 

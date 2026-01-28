@@ -41,7 +41,7 @@ namespace KargoTakip.Persistence.Repositories
 
         public async Task<T> GetByIdAsync(string id)
         {
-           return await _context.Set<T>().FirstOrDefaultAsync(e => e.Id == id);
+            return await _context.Set<T>().FirstOrDefaultAsync(e => e.Id == id);
         }
 
         public async Task<T> GetValueByExpressionAsync(Expression<Func<T, bool>> expression)
