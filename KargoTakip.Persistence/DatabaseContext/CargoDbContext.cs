@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace KargoTakip.Persistence.DatabaseContext
 {
@@ -73,8 +75,8 @@ namespace KargoTakip.Persistence.DatabaseContext
             modelBuilder.Entity<CargoMovement>(entity =>
             {
                 entity.HasIndex(m => new { m.CargoId, m.CreatedDate, m.Id })
-                      .HasDatabaseName("IX_CargoMovements_CargoId_CreatedDate_Id")
-                      .HasFilter("[IsDeleted] = 0");
+                        .HasDatabaseName("IX_CargoMovements_CargoId_CreatedDate_Id")
+                        .HasFilter("[IsDeleted] = 0");
             });
 
             modelBuilder.Entity<CargoReceiver>(entity =>
@@ -82,6 +84,21 @@ namespace KargoTakip.Persistence.DatabaseContext
                 entity.Property(r => r.Email).HasMaxLength(256);
                 entity.HasIndex(r => r.Email)
                       .HasDatabaseName("IX_CargoReceivers_Email")
+                      .HasFilter("[IsDeleted] = 0");
+
+                entity.Property(r => r.Name).HasMaxLength(128);
+                entity.Property(r => r.Surname).HasMaxLength(128);
+
+                entity.HasIndex(r => new { r.Name, r.Surname })
+                      .HasDatabaseName("IX_CargoReceivers_Name_Surname")
+                      .HasFilter("[IsDeleted] = 0");
+            });
+
+            modelBuilder.Entity<CargoSender>(entity =>
+            {
+                entity.Property(s => s.FullName).HasMaxLength(256);
+                entity.HasIndex(s => s.FullName)
+                      .HasDatabaseName("IX_CargoSenders_FullName")
                       .HasFilter("[IsDeleted] = 0");
             });
 

@@ -10,16 +10,17 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
         // Filter parameters
         public int? Status { get; set; }  // Nullable int for API binding
         public string? TrackingNumber { get; set; }
+        public string? SearchTerm { get; set; }
         public string? SenderName { get; set; }
         public string? ReceiverName { get; set; }
         public string? ReceiverEmail { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
-        
+
         // Sorting parameters
         public string? OrderBy { get; set; } = "date";
         public bool IsDescending { get; set; } = true;
-        
+
         // Paging parameters
         public int PageIndex { get; set; } = 1;
         public int PageSize { get; set; } = 50; // sensible default to prevent huge responses
@@ -37,7 +38,7 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
         public bool IncludeMovements { get; set; } = false;
 
         // Helper property to convert int to CargoStatus
-        public CargoStatus? GetCargoStatus() 
+        public CargoStatus? GetCargoStatus()
             => Status.HasValue ? (CargoStatus)Status.Value : null;
     }
 

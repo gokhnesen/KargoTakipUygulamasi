@@ -25,16 +25,16 @@ export class CargoTrackingComponent implements OnInit {
     private cargoService: CargoServices,
     private router: Router,
     private route: ActivatedRoute
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       const trackingNo = params['tracking'];
-      
+
       if (trackingNo) {
         this.trackingNumber = trackingNo;
         setTimeout(() => {
-          this.trackCargo(); 
+          this.trackCargo();
         }, 100);
       }
     });
@@ -79,16 +79,16 @@ export class CargoTrackingComponent implements OnInit {
           createdDate: response.createdDate,
           updatedDate: response.updatedDate
         } as Cargo;
-        
+
         this.movements = response.movements || [];
 
         this.loading = false;
-        
+
         this.router.navigate(['/cargo-tracking', this.trackingNumber]);
       },
       error: (err) => {
-        this.error = err.status === 404 
-          ? 'Kargo bulunamadı. Lütfen takip numarasını kontrol ediniz.' 
+        this.error = err.status === 404
+          ? 'Kargo bulunamadı. Lütfen takip numarasını kontrol ediniz.'
           : 'Bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.';
         this.loading = false;
       }

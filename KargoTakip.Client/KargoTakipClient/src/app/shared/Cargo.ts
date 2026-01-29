@@ -1,24 +1,20 @@
-import { BaseEntity } from "./BaseEntity";
 import { CargoMovement } from "./CargoMovement";
-import { CargoReceiver } from "./CargoReceiver";
-import { CargoSender } from "./CargoSender";
 import { CargoStatus } from "./CargoStatus";
 
-export interface Cargo extends BaseEntity {
-  currentLocation?: string;
+export interface Cargo {
+  id: string;
   trackingNumber: string;
-  sender?: CargoSender;
-  senderId?: string;
-  receiver?: CargoReceiver;
-  receiverId?: string;
-  movements?: CargoMovement[];  // Kargo hareketleri listesi
+  senderName: string;
+  senderAddress: string;
+  senderPhoneNumber: string;
+  receiverName: string;
+  receiverSurname: string;
+  receiverAddress: string;
+  receiverPhoneNumber: string;
+  receiverEmail: string;
   status: CargoStatus;
-  senderName?: string;
-  senderAddress?: string;
-  senderPhoneNumber?: string;
-  receiverName?: string;
-  receiverSurname?: string;
-  receiverAddress?: string;
-  receiverPhoneNumber?: string;
-  receiverEmail?: string;
+  createdDate: Date;
+  updatedDate?: Date;
+  currentLocation?: string;
+  movements?: CargoMovement[];
 }

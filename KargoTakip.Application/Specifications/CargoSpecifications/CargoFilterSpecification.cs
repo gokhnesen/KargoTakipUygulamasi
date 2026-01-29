@@ -10,13 +10,16 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
         public CargoFilterSpecification(CargoFilterParams filterParams)
             : base(BuildCriteria(filterParams))
         {
-            AddInclude(c => c.Sender);
-            AddInclude(c => c.Receiver);
-            if (filterParams.IncludeMovements)
+            if (!filterParams.IsCount)
             {
-                AddInclude(c => c.Movements);
-                // Collection include: prefer split query to avoid cartesian explosion
-                ApplySplitQuery();
+                AddInclude(c => c.Sender);
+                AddInclude(c => c.Receiver);
+                if (filterParams.IncludeMovements)
+                {
+                    AddInclude(c => c.Movements);
+                    // Collection include: prefer split query to avoid cartesian explosion
+                    ApplySplitQuery();
+                }
             }
 
             if (!string.IsNullOrEmpty(filterParams.OrderBy))
@@ -97,6 +100,17 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
                 criteria = CombineExpressions(criteria, c => c.Status == status);
             }
 
+            // General Search Term
+            if (!string.IsNullOrEmpty(filterParams.SearchTerm))
+            {
+                var searchTerm = filterParams.SearchTerm.ToLower();
+                criteria = CombineExpressions(criteria, c =>
+                    c.TrackingNumber.ToLower().Contains(searchTerm) ||
+                    (c.Sender != null && c.Sender.FullName.ToLower().Contains(searchTerm)) ||
+                    (c.Receiver != null && (c.Receiver.Name + " " + c.Receiver.Surname).ToLower().Contains(searchTerm))
+                );
+            }
+
             // Tracking number search
             if (!string.IsNullOrEmpty(filterParams.TrackingNumber))
             {
@@ -108,7 +122,7 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
             if (!string.IsNullOrEmpty(filterParams.SenderName))
             {
                 var senderName = filterParams.SenderName.ToLower();
-                criteria = CombineExpressions(criteria, c => 
+                criteria = CombineExpressions(criteria, c =>
                     c.Sender != null && c.Sender.FullName.ToLower().Contains(senderName));
             }
 
@@ -116,8 +130,8 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
             if (!string.IsNullOrEmpty(filterParams.ReceiverName))
             {
                 var receiverName = filterParams.ReceiverName.ToLower();
-                criteria = CombineExpressions(criteria, c => 
-                    c.Receiver != null && 
+                criteria = CombineExpressions(criteria, c =>
+                    c.Receiver != null &&
                     (c.Receiver.Name + " " + c.Receiver.Surname).ToLower().Contains(receiverName));
             }
 
@@ -125,8 +139,8 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
             if (!string.IsNullOrEmpty(filterParams.ReceiverEmail))
             {
                 var receiverEmail = filterParams.ReceiverEmail.ToLower();
-                criteria = CombineExpressions(criteria, c => 
-                    c.Receiver != null && 
+                criteria = CombineExpressions(criteria, c =>
+                    c.Receiver != null &&
                     c.Receiver.Email.ToLower().Contains(receiverEmail));
             }
 
@@ -207,6 +221,7 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
     {
         public CargoStatus? Status { get; set; }
         public string? TrackingNumber { get; set; }
+        public string? SearchTerm { get; set; } // General search term for multiple fields
         public string? SenderName { get; set; }
         public string? ReceiverName { get; set; }
         public string? ReceiverEmail { get; set; }
@@ -220,5 +235,6 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
         public bool UseKeysetPagination { get; set; } = false;
         public DateTime? CursorCreatedDate { get; set; }
         public string? CursorId { get; set; }
+        public bool IsCount { get; set; } = false;
     }
 }

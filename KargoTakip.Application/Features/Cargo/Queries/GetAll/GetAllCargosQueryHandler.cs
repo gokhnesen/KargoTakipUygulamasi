@@ -32,7 +32,7 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
 
         public async Task<GetAllCargosQueryResult> Handle(GetAllCargosQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Tum kargolar listeleniyor. Filtreler: Status={Status}, TrackingNumber={TrackingNumber}, Email={Email}, Page={Page}", 
+            _logger.LogInformation("Tum kargolar listeleniyor. Filtreler: Status={Status}, TrackingNumber={TrackingNumber}, Email={Email}, Page={Page}",
                 request.Status, request.TrackingNumber, request.ReceiverEmail, request.PageIndex);
 
             var pageIndex = request.PageIndex < 1 ? 1 : request.PageIndex;
@@ -48,6 +48,7 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
             {
                 Status = request.GetCargoStatus(),
                 TrackingNumber = request.TrackingNumber,
+                SearchTerm = request.SearchTerm,
                 SenderName = request.SenderName,
                 ReceiverName = request.ReceiverName,
                 ReceiverEmail = request.ReceiverEmail,
@@ -56,7 +57,6 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
                 OrderBy = normalizedOrderBy,
                 IsDescending = request.IsDescending,
                 PageIndex = useKeyset ? 1 : pageIndex,
-                // For keyset we fetch 1 extra row to compute HasMore
                 PageSize = useKeyset ? (pageSize + 1) : pageSize,
                 IncludeMovements = request.IncludeMovements,
                 UseKeysetPagination = useKeyset,
@@ -66,11 +66,6 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
 
             var spec = new CargoFilterSpecification(filterParams);
 
-            
-            var cargos = await _cargoRepository.GetAllWithSpecAsync(spec);
-            
-            
-            
             var totalCount = -1;
             if (request.IncludeTotalCount && !useKeyset)
             {
@@ -78,6 +73,7 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
                 {
                     Status = request.GetCargoStatus(),
                     TrackingNumber = request.TrackingNumber,
+                    SearchTerm = request.SearchTerm,
                     SenderName = request.SenderName,
                     ReceiverName = request.ReceiverName,
                     ReceiverEmail = request.ReceiverEmail,
@@ -85,10 +81,13 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
                     EndDate = request.EndDate,
                     PageSize = 0,
                     IncludeMovements = false,
-                    UseKeysetPagination = false
+                    UseKeysetPagination = false,
+                    IsCount = true // Optimized count query (no joins)
                 });
                 totalCount = await _cargoRepository.CountAsync(countSpec);
             }
+
+            var cargos = await _cargoRepository.GetAllWithSpecAsync(spec);
 
             _logger.LogInformation("Veritabanindan {Count} adet kargo getirildi (Toplam: {TotalCount}).", cargos?.Count ?? 0, totalCount);
 
@@ -132,13 +131,13 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
                 UpdatedDate = c.UpdatedDate,
                 Movements = request.IncludeMovements
                     ? (c.Movements?.OrderByDescending(m => m.CreatedDate).Select(m => new CargoMovementDto
-                        {
-                            Id = m.Id,
-                            NewStatus = m.NewStatus,
-                            Location = m.Location,
-                            Description = m.Description,
-                            CreatedDate = m.CreatedDate
-                        }).ToList() ?? new List<CargoMovementDto>())
+                    {
+                        Id = m.Id,
+                        NewStatus = m.NewStatus,
+                        Location = m.Location,
+                        Description = m.Description,
+                        CreatedDate = m.CreatedDate
+                    }).ToList() ?? new List<CargoMovementDto>())
                     : new List<CargoMovementDto>()
             }).ToList();
 

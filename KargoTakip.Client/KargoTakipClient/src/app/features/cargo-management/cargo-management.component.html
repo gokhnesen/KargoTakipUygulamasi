@@ -1,8 +1,6 @@
 <div class="management-wrapper">
-  <!-- Mobile Sidebar Overlay -->
   <div class="sidebar-overlay" [class.active]="sidebarOpen" (click)="closeSidebar()"></div>
-  
-  <!-- Sidebar -->
+
   <aside class="sidebar" [class.mobile-open]="sidebarOpen">
     <div class="sidebar-header">
       <div class="logo">
@@ -16,7 +14,7 @@
         <span class="nav-icon">📋</span>
         <span class="nav-text">Tüm Kargolar</span>
       </button>
-      
+
       <button class="nav-item" (click)="openCreateModal()">
         <span class="nav-icon">➕</span>
         <span class="nav-text">Yeni Kargo</span>
@@ -25,27 +23,27 @@
       <div class="nav-divider"></div>
 
       <div class="nav-section-title">Durum Filtreleri</div>
-      
+
       <button class="nav-item nav-item-small">
         <span class="status-dot status-received"></span>
         <span class="nav-text">Teslim Alındı</span>
       </button>
-      
+
       <button class="nav-item nav-item-small">
         <span class="status-dot status-processing"></span>
         <span class="nav-text">İşleniyor</span>
       </button>
-      
+
       <button class="nav-item nav-item-small">
         <span class="status-dot status-transit"></span>
         <span class="nav-text">Yolda</span>
       </button>
-      
+
       <button class="nav-item nav-item-small">
         <span class="status-dot status-delivery"></span>
         <span class="nav-text">Dağıtımda</span>
       </button>
-      
+
       <button class="nav-item nav-item-small">
         <span class="status-dot status-delivered"></span>
         <span class="nav-text">Teslim Edildi</span>
@@ -76,16 +74,11 @@
     </header>
 
     <div class="search-section">
-      <input 
-        type="text" 
-        [(ngModel)]="searchTerm"
-        (input)="searchCargo()"
-        placeholder="Takip numarası, gönderici veya alıcı adı ile ara..."
-        class="search-input"
-      />
+      <input type="text" [(ngModel)]="searchTerm" (input)="searchCargo()"
+        placeholder="Takip numarası, gönderici veya alıcı adı ile ara..." class="search-input" />
     </div>
 
-    <div *ngIf="loading" class="loading-message">
+    <div *ngIf="loading.list" class="loading-message">
       Kargolar yükleniyor...
     </div>
 
@@ -93,54 +86,55 @@
       {{ error }}
     </div>
 
-    <div class="cargo-list" *ngIf="!loading && !error">
-    <div class="cargo-card" *ngFor="let cargo of filteredCargos">
-      <div class="cargo-header">
-        <h3>{{ cargo.trackingNumber }}</h3>
-        <span [class]="'status-badge ' + getStatusClass(cargo.status)">
-          {{ getStatusText(cargo.status) }}
-        </span>
-      </div>
-      
-      <div class="cargo-details">
-        <div class="details-left">
-          <div class="detail-section">
-            <h4>📤 Gönderici</h4>
-            <p><strong>Ad:</strong> {{ cargo.senderName || 'Bilinmiyor' }}</p>
-            <p><strong>Telefon:</strong> {{ cargo.senderPhoneNumber || 'Bilinmiyor' }}</p>
-            <p><strong>Adres:</strong> {{ cargo.senderAddress || 'Bilinmiyor' }}</p>
-          </div>
-          
-          <div class="detail-section">
-            <h4>📥 Alıcı</h4>
-            <p><strong>Ad:</strong> {{ cargo.receiverName }} {{ cargo.receiverSurname }}</p>
-            <p><strong>Telefon:</strong> {{ cargo.receiverPhoneNumber || 'Bilinmiyor' }}</p>
-            <p><strong>E-posta:</strong> {{ cargo.receiverEmail || 'Bilinmiyor' }}</p>
-            <p><strong>Adres:</strong> {{ cargo.receiverAddress || 'Bilinmiyor' }}</p>
-          </div>
+    <div class="cargo-list" *ngIf="!loading.list && !error">
+      <div class="cargo-card" *ngFor="let cargo of filteredCargos">
+        <div class="cargo-header">
+          <h3>{{ cargo.trackingNumber }}</h3>
+          <span [class]="'status-badge ' + getStatusClass(cargo.status)">
+            {{ getStatusText(cargo.status) }}
+          </span>
         </div>
-        
-        <div class="details-right">
-          <div class="detail-section">
-            <h4>📍 Konum & Tarih</h4>
-            <p class="current-location"><strong>Şuanki Konum:</strong><br>{{ cargo.currentLocation || (cargo.movements && cargo.movements.length > 0 ? cargo.movements[0].location : 'Bilinmiyor') }}</p>
-            <p><strong>Oluşturulma:</strong> {{ convertToTurkeyTime(cargo.createdDate) | date:'dd.MM.yyyy HH:mm':'':'tr-TR' }}</p>
-            <p><strong>Son Güncelleme:</strong> {{ convertToTurkeyTime(cargo.updatedDate) | date:'dd.MM.yyyy HH:mm':'':'tr-TR' }}</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="cargo-actions">
-        <button (click)="openUpdateModal(cargo)" class="btn-update">
-          Durumu Güncelle
-        </button>
-      </div>
-    </div>
 
-    <div *ngIf="filteredCargos.length === 0" class="no-cargo">
-      <p>Henüz kargo bulunmamaktadır.</p>
+        <div class="cargo-details">
+          <div class="details-left">
+            <div class="detail-section">
+              <h4>📤 Gönderici</h4>
+              <p><strong>Ad:</strong> {{ cargo.senderName || 'Bilinmiyor' }}</p>
+              <p><strong>Telefon:</strong> {{ cargo.senderPhoneNumber || 'Bilinmiyor' }}</p>
+              <p><strong>Adres:</strong> {{ cargo.senderAddress || 'Bilinmiyor' }}</p>
+            </div>
+
+            <div class="detail-section">
+              <h4>📥 Alıcı</h4>
+              <p><strong>Ad:</strong> {{ cargo.receiverName }} {{ cargo.receiverSurname }}</p>
+              <p><strong>Telefon:</strong> {{ cargo.receiverPhoneNumber || 'Bilinmiyor' }}</p>
+              <p><strong>E-posta:</strong> {{ cargo.receiverEmail || 'Bilinmiyor' }}</p>
+              <p><strong>Adres:</strong> {{ cargo.receiverAddress || 'Bilinmiyor' }}</p>
+            </div>
+          </div>
+
+          <div class="details-right">
+            <div class="detail-section">
+              <h4>📍 Konum & Tarih</h4>
+              <p class="current-location"><strong>Şuanki Konum:</strong><br>{{ cargo.currentLocation || (cargo.movements
+                && cargo.movements.length > 0 ? cargo.movements[0].location : 'Bilinmiyor') }}</p>
+              <p><strong>Oluşturulma:</strong> {{ (cargo.createdDate) | date:'dd.MM.yyyy HH:mm':'':'tr-TR' }}</p>
+              <p><strong>Son Güncelleme:</strong> {{ (cargo.updatedDate) | date:'dd.MM.yyyy HH:mm':'':'tr-TR' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="cargo-actions">
+          <button (click)="openUpdateModal(cargo)" class="btn-update">
+            Durumu Güncelle
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="filteredCargos.length === 0" class="no-cargo">
+        <p>Henüz kargo bulunmamaktadır.</p>
+      </div>
     </div>
-  </div>
   </div>
 </div>
 
@@ -172,7 +166,8 @@
         </div>
         <div class="status-content">
           <span class="status-label">Mevcut Durum</span>
-          <span class="status-value" [class]="getStatusClass(selectedCargo?.status!)">{{ getStatusText(selectedCargo?.status!) }}</span>
+          <span class="status-value" [class]="getStatusClass(selectedCargo?.status!)">{{
+            getStatusText(selectedCargo?.status!) }}</span>
         </div>
       </div>
 
@@ -181,7 +176,7 @@
           <span class="card-icon">✏️</span>
           <h3>Yeni Hareket Ekle</h3>
         </div>
-        
+
         <div class="form-content">
           <div class="form-row-modern">
             <div class="form-field">
@@ -201,13 +196,8 @@
                 <span class="label-icon">📍</span>
                 Konum *
               </label>
-              <input 
-                type="text" 
-                [(ngModel)]="newLocation" 
-                placeholder="İstanbul Dağıtım Merkezi"
-                class="modern-input"
-                required
-              />
+              <input type="text" [(ngModel)]="newLocation" placeholder="İstanbul Dağıtım Merkezi" class="modern-input"
+                required />
             </div>
           </div>
 
@@ -216,13 +206,8 @@
               <span class="label-icon">📝</span>
               Açıklama *
             </label>
-            <textarea 
-              [(ngModel)]="newDescription" 
-              placeholder="Kargo hareketine dair detaylı açıklama giriniz..."
-              class="modern-textarea"
-              rows="3"
-              required
-            ></textarea>
+            <textarea [(ngModel)]="newDescription" placeholder="Kargo hareketine dair detaylı açıklama giriniz..."
+              class="modern-textarea" rows="3" required></textarea>
           </div>
         </div>
       </div>
@@ -238,7 +223,7 @@
             <div class="movement-card">
               <div class="movement-top">
                 <span class="status-badge">{{ getStatusText(movement.newStatus || movement.status) }}</span>
-                <span class="movement-time">{{ convertToTurkeyTime(movement.createdDate) | date: 'dd MMM HH:mm':'':'tr-TR' }}</span>
+                <span class="movement-time">{{ (movement.createdDate) | date: 'dd MMM HH:mm':'':'tr-TR' }}</span>
               </div>
               <div class="movement-location">📍 {{ movement.location }}</div>
               <div class="movement-desc" *ngIf="movement.description">{{ movement.description }}</div>
@@ -253,21 +238,18 @@
     </div>
 
     <div class="modal-footer modern-footer">
-      <button class="btn-cancel" (click)="closeUpdateModal()" [disabled]="updating">
+      <button class="btn-cancel" (click)="closeUpdateModal()">
         <span class="btn-icon">✕</span>
         İptal
       </button>
-      <button class="btn-submit" (click)="updateCargoStatus()" [disabled]="updating">
-        <span class="btn-icon" *ngIf="!updating">✓</span>
-        <span class="btn-spinner" *ngIf="updating">⏳</span>
-        <span *ngIf="!updating">Güncelle</span>
-        <span *ngIf="updating">Güncelleniyor...</span>
+      <button class="btn-submit" (click)="updateCargoStatus()">
+        <span class="btn-icon">✓</span>
+        Güncelle
       </button>
     </div>
   </div>
 </div>
 
-<!-- Kargo Oluşturma Modal -->
 <div class="modal-backdrop" *ngIf="showCreateModal" (click)="closeCreateModal()">
   <div class="modal-content modal-large" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -276,126 +258,81 @@
     </div>
 
     <div class="modal-body">
-      <!-- Başarı Mesajı -->
       <div *ngIf="successMessage" class="success-alert">
         ✓ {{ successMessage }}
       </div>
 
-      <!-- Hata Mesajı -->
       <div *ngIf="validationError" class="error-alert">
         ⚠ {{ validationError }}
       </div>
 
-      <!-- Gönderici Bilgileri -->
       <div class="form-section">
         <h3>Gönderici Bilgileri</h3>
-        
+
         <div class="form-group">
           <label>Ad Soyad *</label>
-          <input 
-            type="text" 
-            [(ngModel)]="createForm.senderName" 
-            placeholder="Örn: Ahmet Yılmaz"
-            class="form-control"
-            required
-          />
+          <input type="text" [(ngModel)]="createForm.senderName" placeholder="Örn: Ahmet Yılmaz" class="form-control"
+            required />
         </div>
 
         <div class="form-group">
           <label>Adres *</label>
-          <textarea 
-            [(ngModel)]="createForm.senderAddress" 
-            placeholder="Tam adres bilgisi..."
-            class="form-control"
-            rows="2"
-            required
-          ></textarea>
+          <textarea [(ngModel)]="createForm.senderAddress" placeholder="Tam adres bilgisi..." class="form-control"
+            rows="2" required></textarea>
         </div>
 
         <div class="form-group">
           <label>Telefon *</label>
-          <input 
-            type="tel" 
-            [(ngModel)]="createForm.senderPhoneNumber" 
-            placeholder="Örn: 0555 123 45 67"
-            class="form-control"
-            required
-          />
+          <input type="tel" [(ngModel)]="createForm.senderPhoneNumber" placeholder="Örn: 0555 123 45 67"
+            class="form-control" required />
         </div>
       </div>
 
-      <!-- Alıcı Bilgileri -->
       <div class="form-section">
         <h3>Alıcı Bilgileri</h3>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label>Ad *</label>
-            <input 
-              type="text" 
-              [(ngModel)]="createForm.receiverName" 
-              placeholder="Örn: Mehmet"
-              class="form-control"
-              required
-            />
+            <input type="text" [(ngModel)]="createForm.receiverName" placeholder="Örn: Mehmet" class="form-control"
+              required />
           </div>
 
           <div class="form-group">
             <label>Soyad *</label>
-            <input 
-              type="text" 
-              [(ngModel)]="createForm.receiverSurname" 
-              placeholder="Örn: Demir"
-              class="form-control"
-              required
-            />
+            <input type="text" [(ngModel)]="createForm.receiverSurname" placeholder="Örn: Demir" class="form-control"
+              required />
           </div>
         </div>
 
         <div class="form-group">
           <label>Adres *</label>
-          <textarea 
-            [(ngModel)]="createForm.receiverAddress" 
-            placeholder="Tam adres bilgisi..."
-            class="form-control"
-            rows="2"
-            required
-          ></textarea>
+          <textarea [(ngModel)]="createForm.receiverAddress" placeholder="Tam adres bilgisi..." class="form-control"
+            rows="2" required></textarea>
         </div>
 
         <div class="form-row">
           <div class="form-group">
             <label>Telefon *</label>
-            <input 
-              type="tel" 
-              [(ngModel)]="createForm.receiverPhoneNumber" 
-              placeholder="Örn: 0555 987 65 43"
-              class="form-control"
-              required
-            />
+            <input type="tel" [(ngModel)]="createForm.receiverPhoneNumber" placeholder="Örn: 0555 987 65 43"
+              class="form-control" required />
           </div>
 
           <div class="form-group">
             <label>E-posta *</label>
-            <input 
-              type="email" 
-              [(ngModel)]="createForm.receiverEmail" 
-              placeholder="Örn: mehmet@example.com"
-              class="form-control"
-              required
-            />
+            <input type="email" [(ngModel)]="createForm.receiverEmail" placeholder="Örn: mehmet@example.com"
+              class="form-control" required />
           </div>
         </div>
       </div>
     </div>
 
     <div class="modal-footer">
-      <button class="btn-secondary" (click)="closeCreateModal()" [disabled]="creating">
+      <button class="btn-secondary" (click)="closeCreateModal()">
         İptal
       </button>
-      <button class="btn-primary" (click)="createCargo()" [disabled]="creating">
-        <span *ngIf="!creating">Kargo Oluştur</span>
-        <span *ngIf="creating">Oluşturuluyor...</span>
+      <button class="btn-primary" (click)="createCargo()">
+        <span>Kargo Oluştur</span>
       </button>
     </div>
   </div>

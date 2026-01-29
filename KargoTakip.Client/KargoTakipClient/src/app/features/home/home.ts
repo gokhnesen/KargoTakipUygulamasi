@@ -21,28 +21,22 @@ export class Home {
   loading: boolean = false;
   error: string = '';
   showResults: boolean = false;
-  
+
   CargoStatus = CargoStatus;
-  
+
   constructor(
     private router: Router,
     private cargoService: CargoServices,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
-  convertToTurkeyTime(date: Date | string | undefined): Date | undefined {
-    if (!date) return undefined;
-    const d = new Date(date);
-    d.setHours(d.getHours() + 3);
-    return d;
-  }
 
   searchCargo() {
     if (!this.trackingCode.trim()) {
       this.error = 'Lütfen takip numarası giriniz.';
       return;
     }
-    
+
     this.loading = true;
     this.error = '';
     this.cargo = null;
@@ -55,39 +49,43 @@ export class Home {
           this.loading = false;
           return;
         }
-
         this.cargo = {
+          id: '',
           trackingNumber: response.trackingNumber,
+          senderName: response.sender.fullName,
+          senderAddress: response.sender.address,
+          senderPhoneNumber: response.sender.phoneNumber,
+          receiverName: response.receiver.fullName,
+          receiverSurname: '',
+          receiverAddress: response.receiver.address,
+          receiverPhoneNumber: response.receiver.phoneNumber,
+          receiverEmail: response.receiver.email,
           status: response.currentStatus,
           currentLocation: response.currentLocation,
-          sender: {
-            fullName: response.sender.fullName,
-            address: response.sender.address,
-            phoneNumber: response.sender.phoneNumber
-          },
-          receiver: {
-            fullName: response.receiver.fullName,
-            address: response.receiver.address,
-            phoneNumber: response.receiver.phoneNumber,
-            email: response.receiver.email
-          }
-        } as Cargo;
-        
-        this.movements = (response.movements || []).map((m: any) => ({
-          status: m.status,
-          statusText: m.statusText,
-          location: m.location,
-          description: m.description,
-          date: m.date
-        }));
+          createdDate: new Date(),
+          movements: (response.movements || []).map((m: any) => ({
+            id: '',
+            cargoId: '',
+            newStatus: m.status,
+            location: m.location,
+            description: m.description,
+            createdDate: m.date ? new Date(m.date) : new Date(),
+            updatedDate: m.date ? new Date(m.date) : new Date(),
+            isDeleted: false,
+            status: m.status,
+            statusText: m.statusText,
+            date: m.date
+          }))
+        };
 
+        this.movements = this.cargo?.movements || [];
         this.loading = false;
         this.showResults = true;
         this.cdr.detectChanges();
       },
       error: (err) => {
-        this.error = err.status === 404 
-          ? 'Kargo bulunamadı. Lütfen takip numarasını kontrol ediniz.' 
+        this.error = err.status === 404
+          ? 'Kargo bulunamadı. Lütfen takip numarasını kontrol ediniz.'
           : 'Bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.';
         this.loading = false;
       }
@@ -127,7 +125,7 @@ export class Home {
     };
     return iconMap[status] || '📋';
   }
-  
+
   goToLogin() {
     this.router.navigate(['/login']);
   }

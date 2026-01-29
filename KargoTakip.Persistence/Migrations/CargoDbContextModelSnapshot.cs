@@ -221,7 +221,8 @@ namespace KargoTakip.Persistence.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
@@ -229,7 +230,8 @@ namespace KargoTakip.Persistence.Migrations
 
                     b.Property<string>("Surname")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime2");
@@ -238,6 +240,10 @@ namespace KargoTakip.Persistence.Migrations
 
                     b.HasIndex("Email")
                         .HasDatabaseName("IX_CargoReceivers_Email")
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("Name", "Surname")
+                        .HasDatabaseName("IX_CargoReceivers_Name_Surname")
                         .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("CargoReceivers");
@@ -257,7 +263,8 @@ namespace KargoTakip.Persistence.Migrations
 
                     b.Property<string>("FullName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -270,6 +277,10 @@ namespace KargoTakip.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FullName")
+                        .HasDatabaseName("IX_CargoSenders_FullName")
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("CargoSenders");
                 });

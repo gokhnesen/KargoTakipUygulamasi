@@ -3,40 +3,46 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class LoginServices {
-  private baseUrl: string = 'https://localhost:7055/api/Auth';
+  private baseUrl: string = `${environment.apiUrl}/Auth`;
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasToken());
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router) { }
 
   login(email: string, password: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/login`, { email, password }).pipe(
       tap((response: any) => {
         if (response.success && response.token) {
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('refreshToken', response.refreshToken);
+          // Use sessionStorage instead of localStorage for better security
+          sessionStorage.setItem('token', response.token);
+          if (response.refreshToken) {
+            sessionStorage.setItem('refreshToken', response.refreshToken);
+          }
+          this.isAuthenticatedSubject.next(true);
         }
       })
     );
   }
 
   logout(): void {
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('refreshToken');
     this.isAuthenticatedSubject.next(false);
     this.router.navigate(['/login']);
   }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    return sessionStorage.getItem('token');
   }
 
   private hasToken(): boolean {
-    return !!localStorage.getItem('token');
+    return !!sessionStorage.getItem('token');
   }
 
   isLoggedIn(): boolean {
