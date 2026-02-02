@@ -10,7 +10,7 @@
     </div>
 
     <nav class="sidebar-nav">
-      <button class="nav-item active" (click)="loadCargos()">
+      <button class="nav-item" [class.active]="selectedStatusFilter == null" (click)="clearStatusFilter()">
         <span class="nav-icon">📋</span>
         <span class="nav-text">Tüm Kargolar</span>
       </button>
@@ -24,29 +24,34 @@
 
       <div class="nav-section-title">Durum Filtreleri</div>
 
-      <button class="nav-item nav-item-small">
+      <button type="button" class="nav-item nav-item-small" [class.active]="selectedStatusFilter === CargoStatus.Received" (click)="filterByStatus(CargoStatus.Received)">
         <span class="status-dot status-received"></span>
         <span class="nav-text">Teslim Alındı</span>
       </button>
 
-      <button class="nav-item nav-item-small">
+      <button type="button" class="nav-item nav-item-small" [class.active]="selectedStatusFilter === CargoStatus.Processing" (click)="filterByStatus(CargoStatus.Processing)">
         <span class="status-dot status-processing"></span>
         <span class="nav-text">İşleniyor</span>
       </button>
 
-      <button class="nav-item nav-item-small">
+      <button type="button" class="nav-item nav-item-small" [class.active]="selectedStatusFilter === CargoStatus.InTransit" (click)="filterByStatus(CargoStatus.InTransit)">
         <span class="status-dot status-transit"></span>
         <span class="nav-text">Yolda</span>
       </button>
 
-      <button class="nav-item nav-item-small">
+      <button type="button" class="nav-item nav-item-small" [class.active]="selectedStatusFilter === CargoStatus.OutForDelivery" (click)="filterByStatus(CargoStatus.OutForDelivery)">
         <span class="status-dot status-delivery"></span>
         <span class="nav-text">Dağıtımda</span>
       </button>
 
-      <button class="nav-item nav-item-small">
+      <button type="button" class="nav-item nav-item-small" [class.active]="selectedStatusFilter === CargoStatus.Delivered" (click)="filterByStatus(CargoStatus.Delivered)">
         <span class="status-dot status-delivered"></span>
         <span class="nav-text">Teslim Edildi</span>
+      </button>
+
+      <button type="button" class="nav-item nav-item-small" [class.active]="selectedStatusFilter === CargoStatus.Undelivered" (click)="filterByStatus(CargoStatus.Undelivered)">
+        <span class="status-dot status-undelivered"></span>
+        <span class="nav-text">Teslim Edilemedi</span>
       </button>
     </nav>
 
@@ -67,7 +72,7 @@
       <h1>Kargo Yönetimi</h1>
       <div class="header-stats">
         <div class="stat-item">
-          <span class="stat-value">{{ filteredCargos.length }}</span>
+          <span class="stat-value">{{ totalCount }}</span>
           <span class="stat-label">Toplam Kargo</span>
         </div>
       </div>
@@ -133,6 +138,52 @@
 
       <div *ngIf="filteredCargos.length === 0" class="no-cargo">
         <p>Henüz kargo bulunmamaktadır.</p>
+      </div>
+
+      <div class="pagination-wrapper" *ngIf="!loading.list && !error && totalCount > 0">
+        <div class="pagination-bar">
+          <div class="pagination-info">
+            <span class="pagination-results">
+              <span class="pagination-results-range">{{ startRecord }}–{{ endRecord }}</span>
+              <span class="pagination-results-of"> / </span>
+              <span class="pagination-results-total">{{ totalCount | number }}</span>
+              <span class="pagination-results-label"> kayıt</span>
+            </span>
+            <div class="pagination-size-wrap">
+              <label for="pageSize" class="pagination-size-label">Sayfa başına</label>
+              <select id="pageSize" [ngModel]="filterParams.pageSize" (ngModelChange)="onPageSizeChange($event)" class="pagination-size-select">
+                <option [value]="10">10</option>
+                <option [value]="25">25</option>
+                <option [value]="50">50</option>
+                <option [value]="100">100</option>
+              </select>
+            </div>
+          </div>
+          <nav class="pagination-nav" aria-label="Sayfalama">
+            <div class="pagination-buttons">
+              <button type="button" class="pagination-btn pagination-btn-edge" [disabled]="!canPrev" (click)="goToPage(1)" title="İlk sayfa" aria-label="İlk sayfa">
+                <span class="pagination-btn-icon">⏮</span>
+              </button>
+              <button type="button" class="pagination-btn pagination-btn-edge" [disabled]="!canPrev" (click)="goToPage(filterParams.pageIndex! - 1)" title="Önceki" aria-label="Önceki sayfa">
+                <span class="pagination-btn-icon">‹</span>
+              </button>
+              <div class="pagination-numbers">
+                <ng-container *ngFor="let p of visiblePageNumbers">
+                  <span *ngIf="p === '...'" class="pagination-ellipsis" aria-hidden="true">…</span>
+                  <button *ngIf="p !== '...'" type="button" class="pagination-btn pagination-btn-num" [class.active]="p === filterParams.pageIndex" (click)="goToPage(+p)" [attr.aria-current]="p === filterParams.pageIndex ? 'page' : null" [attr.aria-label]="'Sayfa ' + p">
+                    {{ p }}
+                  </button>
+                </ng-container>
+              </div>
+              <button type="button" class="pagination-btn pagination-btn-edge" [disabled]="!canNext" (click)="goToPage(filterParams.pageIndex! + 1)" title="Sonraki" aria-label="Sonraki sayfa">
+                <span class="pagination-btn-icon">›</span>
+              </button>
+              <button type="button" class="pagination-btn pagination-btn-edge" [disabled]="!canNext" (click)="goToPage(totalPages)" title="Son sayfa" aria-label="Son sayfa">
+                <span class="pagination-btn-icon">⏭</span>
+              </button>
+            </div>
+          </nav>
+        </div>
       </div>
     </div>
   </div>

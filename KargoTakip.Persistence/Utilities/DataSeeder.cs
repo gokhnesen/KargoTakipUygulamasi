@@ -25,9 +25,6 @@ namespace KargoTakip.Persistence.Utilities
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
-        /// <summary>
-        /// Bulk seed cargos using SqlBulkCopy for high performance
-        /// </summary>
         public async Task SeedAsync(int totalCargos = 100_000, int movementsPerCargo = 3)
         {
             if (totalCargos <= 0) return;
@@ -38,10 +35,8 @@ namespace KargoTakip.Persistence.Utilities
 
             try
             {
-                // Step 1: Create sender/receiver pool and insert via EF
                 await SeedCargoSendersAndReceivers();
 
-                // Step 2: Bulk insert cargos via SqlBulkCopy
                 var senderIds = await _context.CargoSenders
                     .AsNoTracking()
                     .Select(s => s.Id)
@@ -60,7 +55,6 @@ namespace KargoTakip.Persistence.Utilities
 
                 await BulkInsertCargos(totalCargos, senderIds, receiverIds);
 
-                // Step 3: Bulk insert cargo movements
                 await BulkInsertCargoMovements(movementsPerCargo);
 
                 sw.Stop();
@@ -142,10 +136,6 @@ namespace KargoTakip.Persistence.Utilities
                     dataTable.Columns.Add("UpdatedDate", typeof(DateTime));
                     dataTable.Columns.Add("IsDeleted", typeof(bool));
 
-                    // IMPORTANT:
-                    // SqlBulkCopy defaults to ordinal-based mapping. After migrations that drop/add columns,
-                    // table column order can differ from our DataTable column order which causes type conversion errors.
-                    // Always map explicitly by column name.
                     bulkCopy.ColumnMappings.Add("Id", "Id");
                     bulkCopy.ColumnMappings.Add("TrackingNumber", "TrackingNumber");
                     bulkCopy.ColumnMappings.Add("SenderId", "SenderId");
@@ -192,7 +182,6 @@ namespace KargoTakip.Persistence.Utilities
             {
                 await connection.OpenAsync();
 
-                // Get all cargo IDs
                 using (var cmd = new SqlCommand("SELECT Id, CreatedDate FROM Cargos WHERE IsDeleted = 0", connection))
                 {
                     cmd.CommandTimeout = 0;
@@ -225,7 +214,6 @@ namespace KargoTakip.Persistence.Utilities
                         dataTable.Columns.Add("UpdatedDate", typeof(DateTime));
                         dataTable.Columns.Add("IsDeleted", typeof(bool));
 
-                        // Explicit name-based mapping to avoid ordinal mismatches
                         bulkCopy.ColumnMappings.Add("Id", "Id");
                         bulkCopy.ColumnMappings.Add("CargoId", "CargoId");
                         bulkCopy.ColumnMappings.Add("NewStatus", "NewStatus");
@@ -272,9 +260,6 @@ namespace KargoTakip.Persistence.Utilities
             }
         }
 
-        /// <summary>
-        /// Delete all cargo data (for testing purposes)
-        /// </summary>
         public async Task ClearAllCargoDataAsync()
         {
             Console.WriteLine("🗑️  Clearing all cargo data...");

@@ -56,10 +56,14 @@ namespace KargoTakip.Persistence.Repositories
             return entity;
         }
 
-        // Specification Pattern Implementation
         public async Task<List<T>> GetAllWithSpecAsync(ISpecification<T> spec)
         {
             return await ApplySpecification(spec).ToListAsync();
+        }
+
+        public async Task<List<string>> GetIdsWithSpecAsync(ISpecification<T> spec)
+        {
+            return await ApplySpecification(spec).Select(x => x.Id).ToListAsync();
         }
 
         public async Task<int> CountAsync(ISpecification<T> spec)
@@ -69,7 +73,6 @@ namespace KargoTakip.Persistence.Repositories
 
         private IQueryable<T> ApplySpecification(ISpecification<T> spec)
         {
-            // Read-only query by default for specifications
             return SpecificationEvaluator<T>.GetQuery(_context.Set<T>().AsNoTracking().AsQueryable(), spec);
         }
     }

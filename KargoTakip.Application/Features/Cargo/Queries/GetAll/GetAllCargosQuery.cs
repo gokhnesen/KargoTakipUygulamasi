@@ -7,8 +7,7 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
 {
     public class GetAllCargosQuery : IRequest<GetAllCargosQueryResult>
     {
-        // Filter parameters
-        public int? Status { get; set; }  // Nullable int for API binding
+        public int? Status { get; set; }
         public string? TrackingNumber { get; set; }
         public string? SearchTerm { get; set; }
         public string? SenderName { get; set; }
@@ -17,27 +16,20 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
 
-        // Sorting parameters
         public string? OrderBy { get; set; } = "date";
         public bool IsDescending { get; set; } = true;
 
-        // Paging parameters
         public int PageIndex { get; set; } = 1;
-        public int PageSize { get; set; } = 50; // sensible default to prevent huge responses
+        public int PageSize { get; set; } = 50;
 
-        // Keyset (cursor) pagination (recommended for big datasets)
-        // Works best with OrderBy=date because it uses (CreatedDate, Id) as a stable cursor.
         public bool UseKeysetPagination { get; set; } = false;
         public DateTime? CursorCreatedDate { get; set; }
         public string? CursorId { get; set; }
 
-        // TotalCount requires COUNT(*) and can be expensive on very large tables.
         public bool IncludeTotalCount { get; set; } = true;
 
-        // Include options
         public bool IncludeMovements { get; set; } = false;
 
-        // Helper property to convert int to CargoStatus
         public CargoStatus? GetCargoStatus()
             => Status.HasValue ? (CargoStatus)Status.Value : null;
     }

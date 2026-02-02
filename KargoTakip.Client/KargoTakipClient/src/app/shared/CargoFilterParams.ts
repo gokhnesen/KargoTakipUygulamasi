@@ -1,4 +1,5 @@
 import { CargoStatus } from './CargoStatus';
+import { Cargo } from './Cargo';
 
 export interface CargoFilterParams {
     status?: CargoStatus;
@@ -14,4 +15,14 @@ export interface CargoFilterParams {
     pageIndex?: number;
     pageSize?: number;
     includeMovements?: boolean;
+    includeTotalCount?: boolean;
+}
+
+export interface CargoListResponse {
+    items: Cargo[];
+    totalCount: number;
+    pageIndex: number;
+    pageSize: number;
+    totalPages: number;
+    hasMore?: boolean;
 }

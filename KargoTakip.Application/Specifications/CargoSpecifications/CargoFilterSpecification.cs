@@ -10,14 +10,13 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
         public CargoFilterSpecification(CargoFilterParams filterParams)
             : base(BuildCriteria(filterParams))
         {
-            if (!filterParams.IsCount)
+            if (!filterParams.IsCount && !filterParams.SkipIncludes)
             {
                 AddInclude(c => c.Sender);
                 AddInclude(c => c.Receiver);
                 if (filterParams.IncludeMovements)
                 {
                     AddInclude(c => c.Movements);
-                    // Collection include: prefer split query to avoid cartesian explosion
                     ApplySplitQuery();
                 }
             }
@@ -74,12 +73,10 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
                 ApplyThenByDescending(c => c.Id);
             }
 
-            // Paging
             if (filterParams.PageSize > 0)
             {
                 if (filterParams.UseKeysetPagination)
                 {
-                    // Keyset pagination doesn't use Skip; filtering is in criteria
                     ApplyPaging(0, filterParams.PageSize);
                 }
                 else
@@ -93,32 +90,31 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
         {
             Expression<Func<Cargo, bool>> criteria = c => !c.IsDeleted;
 
-            // Status filter
             if (filterParams.Status.HasValue)
             {
                 var status = filterParams.Status.Value;
                 criteria = CombineExpressions(criteria, c => c.Status == status);
             }
 
-            // General Search Term
             if (!string.IsNullOrEmpty(filterParams.SearchTerm))
             {
-                var searchTerm = filterParams.SearchTerm.ToLower();
+                var searchTermRaw = filterParams.SearchTerm.Trim();
+                var searchTermLower = searchTermRaw.ToLower();
                 criteria = CombineExpressions(criteria, c =>
-                    c.TrackingNumber.ToLower().Contains(searchTerm) ||
-                    (c.Sender != null && c.Sender.FullName.ToLower().Contains(searchTerm)) ||
-                    (c.Receiver != null && (c.Receiver.Name + " " + c.Receiver.Surname).ToLower().Contains(searchTerm))
+                    c.TrackingNumber == searchTermRaw ||
+                    c.TrackingNumber.StartsWith(searchTermRaw) ||
+                    (c.Sender != null && c.Sender.FullName.ToLower().Contains(searchTermLower)) ||
+                    (c.Receiver != null && (c.Receiver.Name + " " + c.Receiver.Surname).ToLower().Contains(searchTermLower)) ||
+                    (c.Receiver != null && c.Receiver.Email != null && c.Receiver.Email.ToLower().Contains(searchTermLower))
                 );
             }
 
-            // Tracking number search
             if (!string.IsNullOrEmpty(filterParams.TrackingNumber))
             {
-                var trackingNumber = filterParams.TrackingNumber.ToLower();
-                criteria = CombineExpressions(criteria, c => c.TrackingNumber.ToLower().Contains(trackingNumber));
+                var trackingNumber = filterParams.TrackingNumber.Trim();
+                criteria = CombineExpressions(criteria, c => c.TrackingNumber.StartsWith(trackingNumber));
             }
 
-            // Sender name search
             if (!string.IsNullOrEmpty(filterParams.SenderName))
             {
                 var senderName = filterParams.SenderName.ToLower();
@@ -126,7 +122,6 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
                     c.Sender != null && c.Sender.FullName.ToLower().Contains(senderName));
             }
 
-            // Receiver name search
             if (!string.IsNullOrEmpty(filterParams.ReceiverName))
             {
                 var receiverName = filterParams.ReceiverName.ToLower();
@@ -135,7 +130,6 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
                     (c.Receiver.Name + " " + c.Receiver.Surname).ToLower().Contains(receiverName));
             }
 
-            // Receiver email search
             if (!string.IsNullOrEmpty(filterParams.ReceiverEmail))
             {
                 var receiverEmail = filterParams.ReceiverEmail.ToLower();
@@ -144,7 +138,6 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
                     c.Receiver.Email.ToLower().Contains(receiverEmail));
             }
 
-            // Date range filter
             if (filterParams.StartDate.HasValue)
             {
                 var startDate = filterParams.StartDate.Value;
@@ -157,8 +150,6 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
                 criteria = CombineExpressions(criteria, c => c.CreatedDate <= endDate);
             }
 
-            // Keyset pagination filter for "date" ordering
-            // Uses stable cursor: (CreatedDate, Id)
             if (filterParams.UseKeysetPagination
                 && filterParams.CursorCreatedDate.HasValue
                 && !string.IsNullOrEmpty(filterParams.CursorId)
@@ -221,7 +212,7 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
     {
         public CargoStatus? Status { get; set; }
         public string? TrackingNumber { get; set; }
-        public string? SearchTerm { get; set; } // General search term for multiple fields
+        public string? SearchTerm { get; set; }
         public string? SenderName { get; set; }
         public string? ReceiverName { get; set; }
         public string? ReceiverEmail { get; set; }
@@ -236,5 +227,6 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
         public DateTime? CursorCreatedDate { get; set; }
         public string? CursorId { get; set; }
         public bool IsCount { get; set; } = false;
+        public bool SkipIncludes { get; set; } = false;
     }
 }

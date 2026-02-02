@@ -19,7 +19,6 @@ export class LoginServices {
     return this.http.post(`${this.baseUrl}/login`, { email, password }).pipe(
       tap((response: any) => {
         if (response.success && response.token) {
-          // Use sessionStorage instead of localStorage for better security
           sessionStorage.setItem('token', response.token);
           if (response.refreshToken) {
             sessionStorage.setItem('refreshToken', response.refreshToken);

@@ -24,10 +24,15 @@ export class CargoManagementComponent implements OnInit {
   searchTerm: string = '';
 
   filterParams: CargoFilterParams = {
-    pageSize: 50,
+    pageSize: 10,
     pageIndex: 1,
-    includeMovements: true
+    includeMovements: true,
+    includeTotalCount: true
   };
+
+  totalCount: number = 0;
+  totalPages: number = 1;
+  selectedStatusFilter: CargoStatus | null = null;
 
   private searchSubject = new Subject<string>();
 
@@ -96,14 +101,31 @@ export class CargoManagementComponent implements OnInit {
     this.sidebarOpen = false;
   }
 
+  clearStatusFilter(): void {
+    this.selectedStatusFilter = null;
+    this.filterParams.status = undefined;
+    this.filterParams.pageIndex = 1;
+    this.loadCargos();
+  }
+
+  filterByStatus(status: CargoStatus): void {
+    this.selectedStatusFilter = status;
+    this.filterParams.status = status;
+    this.filterParams.pageIndex = 1;
+    this.loadCargos();
+  }
+
   loadCargos(): void {
     this.loading.list = true;
     this.error = '';
 
     this.cargoService.getAll(this.filterParams).subscribe({
       next: (response) => {
-        this.cargos = response;
-        this.filteredCargos = response;
+        this.cargos = response.items;
+        this.filteredCargos = response.items;
+        this.totalCount = response.totalCount >= 0 ? response.totalCount : 0;
+        this.totalPages = response.totalPages > 0 ? response.totalPages : 1;
+        this.filterParams.pageIndex = response.pageIndex;
         this.loading.list = false;
       },
       error: (err: any) => {
@@ -111,6 +133,61 @@ export class CargoManagementComponent implements OnInit {
         this.loading.list = false;
       }
     });
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.filterParams.pageIndex = page;
+    this.loadCargos();
+  }
+
+  onPageSizeChange(size: number): void {
+    this.filterParams.pageSize = size;
+    this.filterParams.pageIndex = 1;
+    this.loadCargos();
+  }
+
+  get canPrev(): boolean {
+    return this.filterParams.pageIndex! > 1;
+  }
+
+  get canNext(): boolean {
+    return this.filterParams.pageIndex! < this.totalPages;
+  }
+
+  get startRecord(): number {
+    if (this.totalCount === 0) return 0;
+    return (this.filterParams.pageIndex! - 1) * this.filterParams.pageSize! + 1;
+  }
+
+  get endRecord(): number {
+    const end = this.filterParams.pageIndex! * this.filterParams.pageSize!;
+    return end > this.totalCount ? this.totalCount : end;
+  }
+
+  get visiblePageNumbers(): (number | string)[] {
+    const current = this.filterParams.pageIndex!;
+    const total = this.totalPages;
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    const pages: (number | string)[] = [];
+    if (current <= 4) {
+      for (let i = 1; i <= 5; i++) pages.push(i);
+      pages.push('...');
+      pages.push(total);
+    } else if (current >= total - 3) {
+      pages.push(1);
+      pages.push('...');
+      for (let i = total - 4; i <= total; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      pages.push('...');
+      for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+      pages.push('...');
+      pages.push(total);
+    }
+    return pages;
   }
 
   searchCargo(): void {
@@ -221,7 +298,6 @@ export class CargoManagementComponent implements OnInit {
     this.validationError = null;
     this.loading.create = true;
 
-    // Construct the payload to match API expectations
     const payload = {
       senderFullName: this.createForm.senderName,
       senderAddress: this.createForm.senderAddress,

@@ -41,7 +41,6 @@ namespace KargoTakip.Persistence.Repositories.Cargo
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
-            // Order movements in memory after fetching
             if (cargo?.Movements != null)
             {
                 cargo.Movements = cargo.Movements.OrderByDescending(m => m.CreatedDate).ToList();

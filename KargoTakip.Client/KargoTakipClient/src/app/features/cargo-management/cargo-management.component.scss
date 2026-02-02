@@ -1,11 +1,9 @@
-// Layout
 .management-wrapper {
   display: flex;
   min-height: 100vh;
   background: #f5f7fa;
 }
 
-// Sidebar Styles
 .sidebar {
   width: 280px;
   background: white;
@@ -186,7 +184,6 @@
   }
 }
 
-// Main Content
 .main-content {
   flex: 1;
   margin-left: 280px;
@@ -293,18 +290,17 @@
   }
 }
 
-// Old styles cleanup (kept for modal compatibility)
 .management-container {
-  display: none; // No longer used
+  display: none;
 }
 
 .management-header {
-  display: none; // Replaced by sidebar
+  display: none;
 }
 
 .header-actions,
 .create-btn {
-  display: none; // Moved to sidebar
+  display: none;
 }
 
 .search-section {
@@ -680,7 +676,196 @@
   font-size: 18px;
 }
 
-// Modal Styles
+.pagination-wrapper {
+  grid-column: 1 / -1;
+  margin-top: 1.5rem;
+  width: 100%;
+}
+
+.pagination-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 1rem 1.5rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.pagination-info {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.pagination-results {
+  font-size: 13px;
+  color: #6b7280;
+  letter-spacing: 0.01em;
+
+  .pagination-results-range {
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .pagination-results-of {
+    color: #9ca3af;
+  }
+
+  .pagination-results-total {
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .pagination-results-label {
+    color: #6b7280;
+    font-weight: 400;
+  }
+}
+
+.pagination-size-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pagination-size-label {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pagination-size-select {
+  padding: 0.35rem 1.75rem 0.35rem 0.65rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 0.5rem center;
+  background-size: 10px;
+  cursor: pointer;
+  appearance: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  }
+}
+
+.pagination-nav {
+  display: flex;
+  align-items: center;
+}
+
+.pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: #f9fafb;
+    border-color: #667eea;
+    color: #667eea;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &.pagination-btn-edge {
+    .pagination-btn-icon {
+      font-size: 16px;
+      line-height: 1;
+    }
+  }
+
+  &.pagination-btn-num {
+    min-width: 32px;
+
+    &.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        color: #fff;
+      }
+    }
+  }
+}
+
+.pagination-numbers {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0 0.25rem;
+}
+
+.pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  font-size: 13px;
+  color: #9ca3af;
+  user-select: none;
+}
+
+@media (max-width: 768px) {
+  .pagination-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+  }
+
+  .pagination-info {
+    justify-content: space-between;
+  }
+
+  .pagination-nav {
+    justify-content: center;
+  }
+
+  .pagination-numbers {
+    margin: 0 0.15rem;
+  }
+
+  .pagination-btn-num:not(.active) {
+    min-width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+}
+
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -723,7 +908,6 @@
   }
 }
 
-// Gradient Header
 .gradient-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -826,7 +1010,6 @@
     }
   }
 
-  // Modal içindeki movements-section için spesifik stiller
   .movements-section {
     margin-top: 0 !important;
     background: white !important;
@@ -999,7 +1182,6 @@
   }
 }
 
-// Modern Status Card
 .status-card {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 12px;
@@ -1064,7 +1246,6 @@
   }
 }
 
-// Eski info-card stilleri (fallback)
 .info-card {
   background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
   border: 1px solid #e0e7ff;
@@ -1104,7 +1285,6 @@
   }
 }
 
-// Modern Update Form Card
 .update-form-card {
   background: white;
   border: 1px solid #e8eaf0;
@@ -1212,7 +1392,6 @@
   line-height: 1.5;
 }
 
-// Eski form stilleri (fallback)
 .update-form-section {
   background: #fafbfc;
   padding: 20px;
@@ -1261,7 +1440,6 @@
   }
 }
 
-// Modern Footer
 .modal-footer {
   padding: 20px 32px;
   border-top: 1px solid #e8eaf0;
@@ -1333,7 +1511,6 @@
     to { transform: rotate(360deg); }
   }
 
-  // Eski stiller (fallback)
   .btn-secondary {
     background: #f0f0f0;
     color: #333;
@@ -1399,7 +1576,6 @@
   gap: 15px;
 }
 
-// Kargo hareketleri timeline stilleri
 .movements-section {
   margin-top: 0;
   background: white;
@@ -1423,7 +1599,6 @@
   }
 }
 
-// Animasyonlar
 @keyframes formCardSlideIn {
   from {
     opacity: 0;

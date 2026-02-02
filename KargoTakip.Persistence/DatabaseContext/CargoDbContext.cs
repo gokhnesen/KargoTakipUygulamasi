@@ -57,7 +57,6 @@ namespace KargoTakip.Persistence.DatabaseContext
                       .HasDatabaseName("IX_Cargos_Status_CreatedDate_Id")
                       .HasFilter("[IsDeleted] = 0");
 
-                // Add indexes for foreign keys
                 entity.HasIndex(c => c.SenderId)
                       .HasDatabaseName("IX_Cargos_SenderId")
                       .HasFilter("[IsDeleted] = 0");
@@ -66,7 +65,6 @@ namespace KargoTakip.Persistence.DatabaseContext
                       .HasDatabaseName("IX_Cargos_ReceiverId")
                       .HasFilter("[IsDeleted] = 0");
 
-                // Add index for Status alone (for status-only queries)
                 entity.HasIndex(c => c.Status)
                       .HasDatabaseName("IX_Cargos_Status")
                       .HasFilter("[IsDeleted] = 0");

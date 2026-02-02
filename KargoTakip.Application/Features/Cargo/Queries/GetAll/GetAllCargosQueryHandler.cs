@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
 {
@@ -37,7 +38,6 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
 
             var pageIndex = request.PageIndex < 1 ? 1 : request.PageIndex;
             var pageSize = request.PageSize <= 0 ? 50 : request.PageSize;
-            // Hard cap to protect API from accidental huge responses
             pageSize = pageSize > 500 ? 500 : pageSize;
 
             var normalizedOrderBy = string.IsNullOrWhiteSpace(request.OrderBy) ? "date" : request.OrderBy.Trim();
@@ -67,7 +67,8 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
             var spec = new CargoFilterSpecification(filterParams);
 
             var totalCount = -1;
-            if (request.IncludeTotalCount && !useKeyset)
+            var runCountQuery = request.IncludeTotalCount && !useKeyset;
+            if (runCountQuery)
             {
                 var countSpec = new CargoFilterSpecification(new CargoFilterParams
                 {
@@ -82,12 +83,57 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
                     PageSize = 0,
                     IncludeMovements = false,
                     UseKeysetPagination = false,
-                    IsCount = true // Optimized count query (no joins)
+                    IsCount = true
                 });
                 totalCount = await _cargoRepository.CountAsync(countSpec);
             }
 
-            var cargos = await _cargoRepository.GetAllWithSpecAsync(spec);
+            var trackingTerm = !string.IsNullOrWhiteSpace(request.TrackingNumber)
+                ? request.TrackingNumber.Trim()
+                : (IsLikelyTrackingNumber(request.SearchTerm) ? request.SearchTerm!.Trim() : null);
+            var useTwoPhaseTracking = !useKeyset
+                && !string.IsNullOrWhiteSpace(trackingTerm)
+                && string.IsNullOrWhiteSpace(request.SenderName)
+                && string.IsNullOrWhiteSpace(request.ReceiverName)
+                && string.IsNullOrWhiteSpace(request.ReceiverEmail);
+
+            List<Domain.Entities.Cargo>? cargos;
+            if (useTwoPhaseTracking)
+            {
+                var filterParamsIdsOnly = new CargoFilterParams
+                {
+                    Status = request.GetCargoStatus(),
+                    TrackingNumber = trackingTerm,
+                    SearchTerm = null,
+                    SenderName = null,
+                    ReceiverName = null,
+                    ReceiverEmail = null,
+                    StartDate = request.StartDate,
+                    EndDate = request.EndDate,
+                    OrderBy = normalizedOrderBy,
+                    IsDescending = request.IsDescending,
+                    PageIndex = pageIndex,
+                    PageSize = pageSize,
+                    IncludeMovements = false,
+                    UseKeysetPagination = false,
+                    SkipIncludes = true
+                };
+                var specIdsOnly = new CargoFilterSpecification(filterParamsIdsOnly);
+                var ids = await _cargoRepository.GetIdsWithSpecAsync(specIdsOnly);
+                if (ids == null || ids.Count == 0)
+                    cargos = new List<Domain.Entities.Cargo>();
+                else
+                {
+                    var byIdsSpec = new CargoByIdsSpecification(ids, includeMovements: request.IncludeMovements);
+                    cargos = await _cargoRepository.GetAllWithSpecAsync(byIdsSpec);
+                    if (cargos != null && cargos.Count > 0)
+                        cargos = cargos.OrderBy(c => ids.IndexOf(c.Id)).ToList();
+                }
+            }
+            else
+            {
+                cargos = await _cargoRepository.GetAllWithSpecAsync(spec);
+            }
 
             _logger.LogInformation("Veritabanindan {Count} adet kargo getirildi (Toplam: {TotalCount}).", cargos?.Count ?? 0, totalCount);
 
@@ -162,6 +208,14 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
                 NextCursorCreatedDate = nextCursorCreatedDate,
                 NextCursorId = nextCursorId
             };
+        }
+
+        private static bool IsLikelyTrackingNumber(string? term)
+        {
+            if (string.IsNullOrWhiteSpace(term)) return false;
+            var t = term.Trim();
+            if (t.Length < 2 || t.Length > 64) return false;
+            return Regex.IsMatch(t, @"^[A-Za-z0-9\-]+$");
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using KargoTakip.Application.Specifications;
+using KargoTakip.Application.Specifications;
 using KargoTakip.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -15,9 +15,9 @@ namespace KargoTakip.Application.Interfaces
         Task<bool> DeleteAsync(string id);
 
         Task<T> GetValueByExpressionAsync(System.Linq.Expressions.Expression<Func<T, bool>> expression);
-        
-        // Specification Pattern Methods
+
         Task<List<T>> GetAllWithSpecAsync(ISpecification<T> spec);
+        Task<List<string>> GetIdsWithSpecAsync(ISpecification<T> spec);
         Task<int> CountAsync(ISpecification<T> spec);
     }
 }

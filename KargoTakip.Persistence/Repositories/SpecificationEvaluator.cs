@@ -11,22 +11,18 @@ namespace KargoTakip.Persistence.Repositories
         {
             var query = inputQuery;
 
-            // Apply criteria (WHERE clause)
             if (spec.Criteria != null)
             {
                 query = query.Where(spec.Criteria);
             }
 
-            // Apply includes (JOIN)
             query = spec.Includes.Aggregate(query, (current, include) => current.Include(include));
 
-            // For collection includes, split query often avoids cartesian explosion
             if (spec.IsSplitQuery)
             {
                 query = query.AsSplitQuery();
             }
 
-            // Apply ordering
             if (spec.OrderBy != null)
             {
                 var orderedQuery = query.OrderBy(spec.OrderBy);
@@ -50,7 +46,6 @@ namespace KargoTakip.Persistence.Repositories
                 query = orderedQuery;
             }
 
-            // Apply paging
             if (spec.IsPagingEnabled)
             {
                 query = query.Skip(spec.Skip).Take(spec.Take);
