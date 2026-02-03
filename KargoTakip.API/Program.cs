@@ -1,5 +1,7 @@
 using KargoTakip.API.Middleware;
+using KargoTakip.API.Services;
 using KargoTakip.Application;
+using KargoTakip.Application.Interfaces;
 using KargoTakip.Infrastructure;
 using KargoTakip.Persistence;
 using KargoTakip.Persistence.Utilities;
@@ -60,6 +62,8 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddApplicationServices();
 builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ITrustedDeviceService, TrustedDeviceCookieService>();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -87,7 +91,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 builder.Services.AddAuthorization();

@@ -1,8 +1,11 @@
-﻿using KargoTakip.Application.Exceptions;
+using KargoTakip.Application.Exceptions;
+using KargoTakip.Application.Interfaces.Notification;
 using KargoTakip.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,13 +14,19 @@ namespace KargoTakip.Application.Features.Authentication.Commands.Register
     public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterCommandResponse>
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration;
         private readonly ILogger<RegisterCommandHandler> _logger;
 
         public RegisterCommandHandler(
             UserManager<ApplicationUser> userManager,
+            IEmailService emailService,
+            IConfiguration configuration,
             ILogger<RegisterCommandHandler> logger)
         {
             _userManager = userManager;
+            _emailService = emailService;
+            _configuration = configuration;
             _logger = logger;
         }
 
@@ -52,14 +61,35 @@ namespace KargoTakip.Application.Features.Authentication.Commands.Register
                 throw new AuthenticationException($"Kullanici kaydi basarisiz: {errors}");
             }
 
-            _logger.LogInformation("Kullanici basariyla kaydedildi: {Email}", request.Email);
+            await SendConfirmationEmailAsync(user, cancellationToken);
+
+            _logger.LogInformation("Kullanici basariyla kaydedildi, onay e-postasi gonderildi: {Email}", request.Email);
 
             return new RegisterCommandResponse
             {
                 Success = true,
-                Message = "Kullanici basariyla kaydedildi.",
+                Message = "Kayit basarili. Lutfen e-posta adresinize gelen onay linkine tiklayin.",
                 UserId = user.Id.ToString()
             };
+        }
+
+        private async Task SendConfirmationEmailAsync(ApplicationUser user, CancellationToken cancellationToken)
+        {
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var clientBaseUrl = _configuration["App:ClientBaseUrl"]?.TrimEnd('/') ?? "https://localhost:4200";
+            var confirmUrl = $"{clientBaseUrl}/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+
+            var subject = "E-posta Adresinizi Onaylayin - KargoTakip";
+            var htmlBody = $@"
+                <h2>Hos geldiniz</h2>
+                <p>KargoTakip hesabinizi olusturdunuz. Asagidaki linke tiklayarak e-posta adresinizi onaylayin:</p>
+                <p><a href=""{confirmUrl}"" style=""display:inline-block; padding:10px 20px; background:#667eea; color:#fff; text-decoration:none; border-radius:8px;"">E-postami Onayla</a></p>
+                <p>Linke tiklayamazsaniz asagidaki adresi tarayiciniza kopyalayin:</p>
+                <p style=""word-break:break-all; color:#666;"">{confirmUrl}</p>
+                <p>Bu e-postayi siz talep etmediyseniz lutfen dikkate almayin.</p>";
+            var plainBody = $"E-posta adresinizi onaylamak icin asagidaki linke tiklayin: {confirmUrl}";
+
+            await _emailService.SendAsync(user.Email, subject, plainBody, htmlBody);
         }
     }
 }

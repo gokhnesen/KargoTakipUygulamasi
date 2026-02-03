@@ -61,10 +61,11 @@
     <div class="login-form-container">
       <div class="form-header">
         <h2>Personel Girişi</h2>
-        <p>Kurumsal hesabınızla sisteme giriş yapın</p>
+        <p *ngIf="step === 'credentials'">Kurumsal hesabınızla sisteme giriş yapın</p>
+        <p *ngIf="step === 'otp'">E-postanıza gelen 6 haneli kodu girin</p>
       </div>
 
-      <form (ngSubmit)="login()" class="login-form">
+      <form *ngIf="step === 'credentials'" (ngSubmit)="login()" class="login-form">
         <div class="form-group">
           <label for="email">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -124,6 +125,15 @@
           {{ error }}
         </div>
 
+        <div *ngIf="showResendLink" class="resend-block">
+          <p>E-posta adresiniz henüz onaylanmamış. Onay linki e-postanıza gönderilsin mi?</p>
+          <button type="button" class="resend-btn" (click)="resendConfirmationEmail()" [disabled]="resendLoading">
+            <span *ngIf="!resendLoading">Onay e-postasını tekrar gönder</span>
+            <span *ngIf="resendLoading">Gönderiliyor...</span>
+          </button>
+          <p *ngIf="resendMessage" class="resend-message">{{ resendMessage }}</p>
+        </div>
+
         <button type="submit" class="submit-btn" [disabled]="loading">
           <span *ngIf="!loading">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -148,6 +158,44 @@
           Ana Sayfaya Dön
         </button>
       </form>
+
+      <div *ngIf="step === 'otp'" class="otp-step">
+        <p class="otp-info">E-posta adresinize (<strong>{{ email }}</strong>) gönderilen 6 haneli doğrulama kodunu girin. Kod 10 dakika geçerlidir.</p>
+        <div class="form-group otp-group">
+          <label class="otp-label">Doğrulama kodu</label>
+          <div class="otp-boxes">
+            <input
+              *ngFor="let i of otpIndices"
+              #otpDigit
+              type="text"
+              inputmode="numeric"
+              maxlength="1"
+              [value]="getOtpChar(i)"
+              (input)="onOtpInput($event, i)"
+              (keydown)="onOtpKeydown($event, i)"
+              [disabled]="otpLoading"
+              class="otp-box"
+              [attr.aria-label]="'Rakam ' + (i + 1)"
+            />
+          </div>
+        </div>
+        <div *ngIf="error" class="error-message">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z"/>
+          </svg>
+          {{ error }}
+        </div>
+        <button type="button" class="submit-btn" (click)="verifyOtp()" [disabled]="otpLoading || !otpCode || otpCode.length < 6">
+          <span *ngIf="!otpLoading">Doğrula ve Giriş Yap</span>
+          <span *ngIf="otpLoading" class="loading-spinner">Doğrulanıyor...</span>
+        </button>
+        <button type="button" class="back-btn" (click)="backToCredentials()" [disabled]="otpLoading">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Girişe Dön
+        </button>
+      </div>
 
       <div class="form-footer">
         <p>Erişim sorunu mu yaşıyorsunuz? <a href="#">IT Destek</a> ile iletişime geçin</p>

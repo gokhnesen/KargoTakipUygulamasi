@@ -3,8 +3,7 @@ import { Cargo } from '../../shared/Cargo';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, BehaviorSubject, tap } from 'rxjs';
 import { CargoMovement } from '../../shared/CargoMovement';
-import { CargoStatus } from '../../shared/CargoStatus';
-import { CargoListResponse } from '../../shared/CargoFilterParams';
+import { CargoFilterParams, CargoListResponse } from '../../shared/CargoFilterParams';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -29,7 +28,7 @@ export class CargoServices {
     return this.http.get<Cargo>(`${this.baseUrl}/${id}`);
   }
 
-  getAll(filter: Partial<import('../../shared/CargoFilterParams').CargoFilterParams> = {}, forceRefresh: boolean = false): Observable<CargoListResponse> {
+  getAll(filter: Partial<CargoFilterParams> = {}, forceRefresh: boolean = false): Observable<CargoListResponse> {
     const now = Date.now();
     const isBasicList = Object.keys(filter).length === 0;
     const isCacheValid = (now - this.cacheTimestamp) < this.CACHE_DURATION;
