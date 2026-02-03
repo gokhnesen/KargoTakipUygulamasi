@@ -1,5 +1,6 @@
 using KargoTakip.Application.Exceptions;
 using KargoTakip.Application.Interfaces.Notification;
+using KargoTakip.Application.Messages;
 using KargoTakip.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -14,18 +15,18 @@ namespace KargoTakip.Application.Features.Authentication.Commands.Register
     public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterCommandResponse>
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IEmailService _emailService;
+        private readonly IEmailQueue _emailQueue;
         private readonly IConfiguration _configuration;
         private readonly ILogger<RegisterCommandHandler> _logger;
 
         public RegisterCommandHandler(
             UserManager<ApplicationUser> userManager,
-            IEmailService emailService,
+            IEmailQueue emailQueue,
             IConfiguration configuration,
             ILogger<RegisterCommandHandler> logger)
         {
             _userManager = userManager;
-            _emailService = emailService;
+            _emailQueue = emailQueue;
             _configuration = configuration;
             _logger = logger;
         }
@@ -89,7 +90,14 @@ namespace KargoTakip.Application.Features.Authentication.Commands.Register
                 <p>Bu e-postayi siz talep etmediyseniz lutfen dikkate almayin.</p>";
             var plainBody = $"E-posta adresinizi onaylamak icin asagidaki linke tiklayin: {confirmUrl}";
 
-            await _emailService.SendAsync(user.Email, subject, plainBody, htmlBody);
+            await _emailQueue.PublishAsync(new SendEmailMessage
+            {
+                Email = user.Email ?? string.Empty,
+                Subject = subject,
+                PlainBody = plainBody,
+                HtmlBody = htmlBody,
+                MessageType = "KayitOnay"
+            }, cancellationToken);
         }
     }
 }

@@ -1,3 +1,4 @@
+using KargoTakip.API.HostedServices;
 using KargoTakip.API.Middleware;
 using KargoTakip.API.Services;
 using KargoTakip.Application;
@@ -96,6 +97,7 @@ builder.Services.AddCors(options =>
     });
 });
 builder.Services.AddAuthorization();
+builder.Services.AddHostedService<EmailConsumerHostedService>();
 
 var app = builder.Build();
 

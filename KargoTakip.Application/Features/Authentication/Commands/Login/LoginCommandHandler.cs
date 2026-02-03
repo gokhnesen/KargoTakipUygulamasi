@@ -1,6 +1,7 @@
 using KargoTakip.Application.Exceptions;
 using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.Notification;
+using KargoTakip.Application.Messages;
 using KargoTakip.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -23,7 +24,7 @@ namespace KargoTakip.Application.Features.Authentication.Commands.Login
         private readonly IConfiguration _configuration;
         private readonly ILogger<LoginCommandHandler> _logger;
         private readonly ILoginOtpStore _loginOtpStore;
-        private readonly IEmailService _emailService;
+        private readonly IEmailQueue _emailQueue;
         private readonly ITrustedDeviceService _trustedDeviceService;
 
         public LoginCommandHandler(
@@ -32,7 +33,7 @@ namespace KargoTakip.Application.Features.Authentication.Commands.Login
             IConfiguration configuration,
             ILogger<LoginCommandHandler> logger,
             ILoginOtpStore loginOtpStore,
-            IEmailService emailService,
+            IEmailQueue emailQueue,
             ITrustedDeviceService trustedDeviceService)
         {
             _userManager = userManager;
@@ -40,7 +41,7 @@ namespace KargoTakip.Application.Features.Authentication.Commands.Login
             _configuration = configuration;
             _logger = logger;
             _loginOtpStore = loginOtpStore;
-            _emailService = emailService;
+            _emailQueue = emailQueue;
             _trustedDeviceService = trustedDeviceService;
         }
 
@@ -111,7 +112,14 @@ namespace KargoTakip.Application.Features.Authentication.Commands.Login
                 <p>Giris dogrulama kodunuz: <strong>{otp}</strong></p>
                 <p>Bu kod <strong>{OtpExpiryMinutes} dakika</strong> gecerlidir.</p>
                 <p>Bu islemi siz yapmadiysaniz lutfen dikkate almayin.</p>";
-            await _emailService.SendAsync(user.Email ?? request.Email, subject, body, htmlBody);
+            await _emailQueue.PublishAsync(new SendEmailMessage
+            {
+                Email = user.Email ?? request.Email,
+                Subject = subject,
+                PlainBody = body,
+                HtmlBody = htmlBody,
+                MessageType = "LoginOtp"
+            }, cancellationToken);
 
             _logger.LogInformation("Giris OTP gonderildi: {Email}", request.Email);
 

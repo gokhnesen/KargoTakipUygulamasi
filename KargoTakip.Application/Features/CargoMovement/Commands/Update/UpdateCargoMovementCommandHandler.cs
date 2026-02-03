@@ -1,6 +1,7 @@
 using KargoTakip.Application.Exceptions;
 using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.Notification;
+using KargoTakip.Application.Messages;
 using KargoTakip.Application.Services;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -15,7 +16,7 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.UpdateCargoMove
         private readonly IGenericRepository<Domain.Entities.CargoMovement> _movementRepository;
         private readonly IGenericRepository<Domain.Entities.Cargo> _cargoRepository;
         private readonly IGenericRepository<Domain.Entities.CargoReceiver> _receiverRepository;
-        private readonly INotificationService _notificationService;
+        private readonly IEmailQueue _emailQueue;
         private readonly ILogger<UpdateCargoMovementCommandHandler> _logger;
         private readonly CargoStatusHelper _statusHelper;
         private readonly EmailTemplateBuilder _emailTemplateBuilder;
@@ -24,7 +25,7 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.UpdateCargoMove
             IGenericRepository<Domain.Entities.CargoMovement> movementRepository,
             IGenericRepository<Domain.Entities.Cargo> cargoRepository,
             IGenericRepository<Domain.Entities.CargoReceiver> receiverRepository,
-            INotificationService notificationService,
+            IEmailQueue emailQueue,
             ILogger<UpdateCargoMovementCommandHandler> logger,
             CargoStatusHelper statusHelper,
             EmailTemplateBuilder emailTemplateBuilder)
@@ -32,7 +33,7 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.UpdateCargoMove
             _movementRepository = movementRepository;
             _cargoRepository = cargoRepository;
             _receiverRepository = receiverRepository;
-            _notificationService = notificationService;
+            _emailQueue = emailQueue;
             _logger = logger;
             _statusHelper = statusHelper;
             _emailTemplateBuilder = emailTemplateBuilder;
@@ -89,7 +90,7 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.UpdateCargoMove
             _logger.LogInformation("Kargo hareketi basariyla guncellendi. CargoId: {CargoId}, Yeni Durum: {NewStatus}, Lokasyon: {Location}", 
                 request.CargoId, request.NewStatus, request.Location);
 
-            var notificationSent = await SendNotificationToReceiverAsync(cargo, request);
+            var notificationSent = await SendNotificationToReceiverAsync(cargo, request, cancellationToken);
 
             return new UpdateCargoMovementCommandResponse
             {
@@ -103,7 +104,7 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.UpdateCargoMove
             };
         }
 
-        private async Task<bool> SendNotificationToReceiverAsync(Domain.Entities.Cargo cargo, UpdateCargoMovementCommand request)
+        private async Task<bool> SendNotificationToReceiverAsync(Domain.Entities.Cargo cargo, UpdateCargoMovementCommand request, CancellationToken cancellationToken)
         {
             try
             {
@@ -119,14 +120,21 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.UpdateCargoMove
                 var emailBody = _emailTemplateBuilder.BuildCargoStatusUpdateEmail(
                     receiver, cargo, statusMessage, request.Location, request.Description);
 
-                await _notificationService.SendEmailAsync(receiver.Email, emailSubject, emailBody);
-                _logger.LogInformation("Email gonderildi. Email: {Email}", receiver.Email);
+                await _emailQueue.PublishAsync(new SendEmailMessage
+                {
+                    Email = receiver.Email,
+                    Subject = emailSubject,
+                    PlainBody = emailBody,
+                    HtmlBody = emailBody,
+                    MessageType = "KargoDurumGuncelleme"
+                }, cancellationToken);
+                _logger.LogInformation("Email kuyruga eklendi. Email: {Email}", receiver.Email);
 
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Bildirim gonderilirken hata olustu. CargoId: {CargoId}", cargo.Id);
+                _logger.LogError(ex, "Bildirim kuyruga eklenirken hata olustu. CargoId: {CargoId}", cargo.Id);
                 return false;
             }
         }

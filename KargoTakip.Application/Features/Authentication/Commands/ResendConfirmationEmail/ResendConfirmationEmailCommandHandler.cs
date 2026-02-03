@@ -1,5 +1,6 @@
 using KargoTakip.Application.Exceptions;
 using KargoTakip.Application.Interfaces.Notification;
+using KargoTakip.Application.Messages;
 using KargoTakip.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -14,18 +15,18 @@ namespace KargoTakip.Application.Features.Authentication.Commands.ResendConfirma
     public class ResendConfirmationEmailCommandHandler : IRequestHandler<ResendConfirmationEmailCommand, ResendConfirmationEmailCommandResponse>
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IEmailService _emailService;
+        private readonly IEmailQueue _emailQueue;
         private readonly IConfiguration _configuration;
         private readonly ILogger<ResendConfirmationEmailCommandHandler> _logger;
 
         public ResendConfirmationEmailCommandHandler(
             UserManager<ApplicationUser> userManager,
-            IEmailService emailService,
+            IEmailQueue emailQueue,
             IConfiguration configuration,
             ILogger<ResendConfirmationEmailCommandHandler> logger)
         {
             _userManager = userManager;
-            _emailService = emailService;
+            _emailQueue = emailQueue;
             _configuration = configuration;
             _logger = logger;
         }
@@ -62,7 +63,14 @@ namespace KargoTakip.Application.Features.Authentication.Commands.ResendConfirma
                 <p>Bu e-postayi siz talep etmediyseniz lutfen dikkate almayin.</p>";
             var plainBody = $"E-posta adresinizi onaylamak icin: {confirmUrl}";
 
-            await _emailService.SendAsync(user.Email, subject, plainBody, htmlBody);
+            await _emailQueue.PublishAsync(new SendEmailMessage
+            {
+                Email = user.Email ?? string.Empty,
+                Subject = subject,
+                PlainBody = plainBody,
+                HtmlBody = htmlBody,
+                MessageType = "ResendOnay"
+            }, cancellationToken);
 
             _logger.LogInformation("Onay e-postasi tekrar gonderildi: {Email}", request.Email);
 
