@@ -12,12 +12,11 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" Version="9.5.0" />
-    <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="9.5.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\KargoTakip.API\KargoTakip.API.csproj" />
-    <ProjectReference Include="..\KargoTakip.Persistence\KargoTakip.Persistence.csproj" />
+    <ProjectReference Include="..\KargoTakip.Persistence\KargoTakip.Persistence.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
 </Project>

@@ -1,8 +1,9 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var rabbitmq = builder.AddRabbitMQ("messaging");
+// Docker kullanmadan mevcut RabbitMQ'ya bağlan (connection string appsettings'ten okunur)
+var messaging = builder.AddConnectionString("messaging");
 
 builder.AddProject<Projects.KargoTakip_API>("kargotakip-api")
-    .WithReference(rabbitmq);
+    .WithReference(messaging);
 
 builder.Build().Run();
