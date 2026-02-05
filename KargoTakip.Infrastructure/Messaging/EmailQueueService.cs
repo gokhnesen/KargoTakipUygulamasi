@@ -62,7 +62,7 @@ namespace KargoTakip.Infrastructure.Messaging
                 properties.ContentType = "application/json";
 
                 channel.BasicPublish(exchange: "", routingKey: queueName, basicProperties: properties, body: body);
-                _logger.LogDebug("Email message published to queue {QueueName}, Type: {MessageType}", queueName, message.MessageType ?? "Unknown");
+                _logger.LogInformation("Mail RabbitMQ kuyruguna gonderildi. Alici: {Email}, Tip: {MessageType}, Kuyruk: {QueueName}", message.Email, message.MessageType ?? "Unknown", queueName);
             }
             catch (Exception ex)
             {

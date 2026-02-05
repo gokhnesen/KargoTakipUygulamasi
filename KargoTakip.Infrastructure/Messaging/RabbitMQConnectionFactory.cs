@@ -13,7 +13,9 @@ namespace KargoTakip.Infrastructure.Messaging
     {
         public static ConnectionFactory CreateFromConfiguration(IConfiguration configuration)
         {
-            var uri = configuration["ConnectionStrings:messaging"];
+            // Aspire WithReference(rabbitmq) ConnectionStrings:messaging enjekte eder; bazen ConnectionStrings__messaging (env) olur
+            var uri = configuration["ConnectionStrings:messaging"]
+                ?? configuration["ConnectionStrings__messaging"];
             if (!string.IsNullOrWhiteSpace(uri))
             {
                 return new ConnectionFactory

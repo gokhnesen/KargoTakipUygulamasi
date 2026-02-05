@@ -32,32 +32,48 @@ namespace KargoTakip.API.HostedServices
             _logger = logger;
         }
 
+        private const int MaxConnectionRetries = 10;
+        private const int ConnectionRetryDelayMs = 3000;
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            try
+            for (int attempt = 1; attempt <= MaxConnectionRetries; attempt++)
             {
-                var factory = RabbitMQConnectionFactory.CreateFromConfiguration(_configuration);
-                _connection = factory.CreateConnection();
-                _channel = _connection.CreateModel();
+                if (stoppingToken.IsCancellationRequested)
+                    return;
 
-                var queueName = _configuration["RabbitMQ:QueueName"] ?? "email-send";
-                _channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+                try
+                {
+                    var factory = RabbitMQConnectionFactory.CreateFromConfiguration(_configuration);
+                    _connection = factory.CreateConnection();
+                    _channel = _connection.CreateModel();
 
-                var consumer = new AsyncEventingBasicConsumer(_channel);
-                consumer.Received += OnMessageReceivedAsync;
+                    var queueName = _configuration["RabbitMQ:QueueName"] ?? "email-send";
+                    _channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
 
-                _channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
-                _logger.LogInformation("Email consumer started. Queue: {QueueName}", queueName);
+                    var consumer = new AsyncEventingBasicConsumer(_channel);
+                    consumer.Received += OnMessageReceivedAsync;
 
-                await Task.Delay(Timeout.Infinite, stoppingToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                // Expected when stopping
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Email consumer failed to start.");
+                    _channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
+                    _logger.LogInformation("Email consumer baslatildi. Kuyruk: {QueueName}. Mail istekleri kullaniciya gonderilecek.", queueName);
+
+                    await Task.Delay(Timeout.Infinite, stoppingToken).ConfigureAwait(false);
+                    return;
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "RabbitMQ baglantisi basarisiz (deneme {Attempt}/{Max}). {Delay}s sonra tekrar denenecek.", attempt, MaxConnectionRetries, ConnectionRetryDelayMs / 1000);
+                    if (attempt == MaxConnectionRetries)
+                    {
+                        _logger.LogError(ex, "Email consumer baslatilamadi. Mail gonderimi calismayacak.");
+                        return;
+                    }
+                    await Task.Delay(ConnectionRetryDelayMs, stoppingToken).ConfigureAwait(false);
+                }
             }
         }
 
@@ -81,10 +97,11 @@ namespace KargoTakip.API.HostedServices
                 using var scope = _scopeFactory.CreateScope();
                 var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
                 var htmlBody = message.HtmlBody ?? message.PlainBody;
+                _logger.LogInformation("Mail kuyruktan alindi, kullaniciya gonderiliyor: {Email}, Tip: {MessageType}", message.Email, message.MessageType ?? "Unknown");
                 await emailService.SendAsync(message.Email, message.Subject, message.PlainBody, htmlBody).ConfigureAwait(false);
 
                 channel.BasicAck(ea.DeliveryTag, false);
-                _logger.LogDebug("Email sent and acked. Type: {MessageType}, To: {Email}", message.MessageType ?? "Unknown", message.Email);
+                _logger.LogInformation("Mail kullaniciya gonderildi ve kuyruktan silindi. Alici: {Email}, Tip: {MessageType}", message.Email, message.MessageType ?? "Unknown");
             }
             catch (Exception ex)
             {

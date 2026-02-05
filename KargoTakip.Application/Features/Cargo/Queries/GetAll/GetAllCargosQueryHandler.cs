@@ -18,15 +18,18 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
     public class GetAllCargosQueryHandler : IRequestHandler<GetAllCargosQuery, GetAllCargosQueryResult>
     {
         private readonly IGenericRepository<Domain.Entities.Cargo> _cargoRepository;
+        private readonly ICargoSearchService _cargoSearchService;
         private readonly ILogger<GetAllCargosQueryHandler> _logger;
         private readonly CargoStatusHelper _statusHelper;
 
         public GetAllCargosQueryHandler(
             IGenericRepository<Domain.Entities.Cargo> cargoRepository,
+            ICargoSearchService cargoSearchService,
             ILogger<GetAllCargosQueryHandler> logger,
             CargoStatusHelper statusHelper)
         {
             _cargoRepository = cargoRepository;
+            _cargoSearchService = cargoSearchService;
             _logger = logger;
             _statusHelper = statusHelper;
         }
@@ -67,72 +70,121 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
             var spec = new CargoFilterSpecification(filterParams);
 
             var totalCount = -1;
-            var runCountQuery = request.IncludeTotalCount && !useKeyset;
-            if (runCountQuery)
+            List<Domain.Entities.Cargo>? cargos = null;
+            var usedElasticsearch = false;
+
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm) && !useKeyset)
             {
-                var countSpec = new CargoFilterSpecification(new CargoFilterParams
+                var skip = (pageIndex - 1) * pageSize;
+                var esFilter = new CargoSearchFilter
                 {
                     Status = request.GetCargoStatus(),
-                    TrackingNumber = request.TrackingNumber,
-                    SearchTerm = request.SearchTerm,
+                    StartDate = request.StartDate,
+                    EndDate = request.EndDate,
                     SenderName = request.SenderName,
                     ReceiverName = request.ReceiverName,
-                    ReceiverEmail = request.ReceiverEmail,
-                    StartDate = request.StartDate,
-                    EndDate = request.EndDate,
-                    PageSize = 0,
-                    IncludeMovements = false,
-                    UseKeysetPagination = false,
-                    IsCount = true
-                });
-                totalCount = await _cargoRepository.CountAsync(countSpec);
-            }
-
-            var trackingTerm = !string.IsNullOrWhiteSpace(request.TrackingNumber)
-                ? request.TrackingNumber.Trim()
-                : (IsLikelyTrackingNumber(request.SearchTerm) ? request.SearchTerm!.Trim() : null);
-            var useTwoPhaseTracking = !useKeyset
-                && !string.IsNullOrWhiteSpace(trackingTerm)
-                && string.IsNullOrWhiteSpace(request.SenderName)
-                && string.IsNullOrWhiteSpace(request.ReceiverName)
-                && string.IsNullOrWhiteSpace(request.ReceiverEmail);
-
-            List<Domain.Entities.Cargo>? cargos;
-            if (useTwoPhaseTracking)
-            {
-                var filterParamsIdsOnly = new CargoFilterParams
-                {
-                    Status = request.GetCargoStatus(),
-                    TrackingNumber = trackingTerm,
-                    SearchTerm = null,
-                    SenderName = null,
-                    ReceiverName = null,
-                    ReceiverEmail = null,
-                    StartDate = request.StartDate,
-                    EndDate = request.EndDate,
-                    OrderBy = normalizedOrderBy,
-                    IsDescending = request.IsDescending,
-                    PageIndex = pageIndex,
-                    PageSize = pageSize,
-                    IncludeMovements = false,
-                    UseKeysetPagination = false,
-                    SkipIncludes = true
+                    ReceiverEmail = request.ReceiverEmail
                 };
-                var specIdsOnly = new CargoFilterSpecification(filterParamsIdsOnly);
-                var ids = await _cargoRepository.GetIdsWithSpecAsync(specIdsOnly);
-                if (ids == null || ids.Count == 0)
-                    cargos = new List<Domain.Entities.Cargo>();
-                else
+                CargoSearchResult? esResult = null;
+                try
                 {
-                    var byIdsSpec = new CargoByIdsSpecification(ids, includeMovements: request.IncludeMovements);
-                    cargos = await _cargoRepository.GetAllWithSpecAsync(byIdsSpec);
-                    if (cargos != null && cargos.Count > 0)
-                        cargos = cargos.OrderBy(c => ids.IndexOf(c.Id)).ToList();
+                    using var esCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    esCts.CancelAfter(3000);
+                    esResult = await _cargoSearchService.SearchIdsAsync(request.SearchTerm!.Trim(), esFilter, skip, pageSize, esCts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogWarning("Elasticsearch arama zaman asimi; veritabani ile devam ediliyor.");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Elasticsearch arama basarisiz; veritabani ile devam ediliyor.");
+                }
+                if (esResult != null)
+                {
+                    usedElasticsearch = true;
+                    totalCount = request.IncludeTotalCount ? esResult.TotalCount : -1;
+                    if (esResult.Ids.Count == 0)
+                        cargos = new List<Domain.Entities.Cargo>();
+                    else
+                    {
+                        var esIds = esResult.Ids.ToList();
+                        var byIdsSpec = new CargoByIdsSpecification(esResult.Ids, includeMovements: request.IncludeMovements);
+                        cargos = await _cargoRepository.GetAllWithSpecAsync(byIdsSpec);
+                        if (cargos != null)
+                            cargos = cargos.OrderBy(c => esIds.IndexOf(c.Id)).ToList();
+                    }
                 }
             }
-            else
+
+            if (!usedElasticsearch)
             {
-                cargos = await _cargoRepository.GetAllWithSpecAsync(spec);
+                var runCountQuery = request.IncludeTotalCount && !useKeyset;
+                if (runCountQuery)
+                {
+                    var countSpec = new CargoFilterSpecification(new CargoFilterParams
+                    {
+                        Status = request.GetCargoStatus(),
+                        TrackingNumber = request.TrackingNumber,
+                        SearchTerm = request.SearchTerm,
+                        SenderName = request.SenderName,
+                        ReceiverName = request.ReceiverName,
+                        ReceiverEmail = request.ReceiverEmail,
+                        StartDate = request.StartDate,
+                        EndDate = request.EndDate,
+                        PageSize = 0,
+                        IncludeMovements = false,
+                        UseKeysetPagination = false,
+                        IsCount = true
+                    });
+                    totalCount = await _cargoRepository.CountAsync(countSpec);
+                }
+
+                var trackingTerm = !string.IsNullOrWhiteSpace(request.TrackingNumber)
+                    ? request.TrackingNumber.Trim()
+                    : (IsLikelyTrackingNumber(request.SearchTerm) ? request.SearchTerm!.Trim() : null);
+                var useTwoPhaseTracking = !useKeyset
+                    && !string.IsNullOrWhiteSpace(trackingTerm)
+                    && string.IsNullOrWhiteSpace(request.SenderName)
+                    && string.IsNullOrWhiteSpace(request.ReceiverName)
+                    && string.IsNullOrWhiteSpace(request.ReceiverEmail);
+
+                if (useTwoPhaseTracking)
+                {
+                    var filterParamsIdsOnly = new CargoFilterParams
+                    {
+                        Status = request.GetCargoStatus(),
+                        TrackingNumber = trackingTerm,
+                        SearchTerm = null,
+                        SenderName = null,
+                        ReceiverName = null,
+                        ReceiverEmail = null,
+                        StartDate = request.StartDate,
+                        EndDate = request.EndDate,
+                        OrderBy = normalizedOrderBy,
+                        IsDescending = request.IsDescending,
+                        PageIndex = pageIndex,
+                        PageSize = pageSize,
+                        IncludeMovements = false,
+                        UseKeysetPagination = false,
+                        SkipIncludes = true
+                    };
+                    var specIdsOnly = new CargoFilterSpecification(filterParamsIdsOnly);
+                    var ids = await _cargoRepository.GetIdsWithSpecAsync(specIdsOnly);
+                    if (ids == null || ids.Count == 0)
+                        cargos = new List<Domain.Entities.Cargo>();
+                    else
+                    {
+                        var byIdsSpec = new CargoByIdsSpecification(ids, includeMovements: request.IncludeMovements);
+                        cargos = await _cargoRepository.GetAllWithSpecAsync(byIdsSpec);
+                        if (cargos != null && cargos.Count > 0)
+                            cargos = cargos.OrderBy(c => ids.IndexOf(c.Id)).ToList();
+                    }
+                }
+                else
+                {
+                    cargos = await _cargoRepository.GetAllWithSpecAsync(spec);
+                }
             }
 
             _logger.LogInformation("Veritabanindan {Count} adet kargo getirildi (Toplam: {TotalCount}).", cargos?.Count ?? 0, totalCount);
@@ -158,6 +210,10 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
             {
                 hasMore = true;
                 cargos = cargos.Take(pageSize).ToList();
+            }
+            else if (!useKeyset && totalCount >= 0)
+            {
+                hasMore = (pageIndex * pageSize) < totalCount;
             }
 
             var response = cargos.Select(c => new GetAllCargosQueryResponse

@@ -1,6 +1,6 @@
-﻿using KargoTakip.Application.Exceptions;
+using KargoTakip.Application.Exceptions;
+using Microsoft.AspNetCore.Hosting;
 using System.Net;
-using System.Net.Http;
 using System.Text.Json;
 
 namespace KargoTakip.API.Middleware
@@ -69,7 +69,10 @@ namespace KargoTakip.API.Middleware
                 default:
                     context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                     response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    response.Message = "Bir hata oluştu. Lütfen daha sonra tekrar deneyin.";
+                    var env = context.RequestServices.GetService<IWebHostEnvironment>();
+                    response.Message = env?.IsDevelopment() == true
+                        ? $"{exception.Message} ({exception.GetType().Name})"
+                        : "Bir hata oluştu. Lütfen daha sonra tekrar deneyin.";
                     _logger.LogError(exception, "Beklenmeyen hata");
                     break;
             }

@@ -3,7 +3,9 @@ using KargoTakip.API.Middleware;
 using KargoTakip.API.Services;
 using KargoTakip.Application;
 using KargoTakip.Application.Interfaces;
+using KargoTakip.Application.Interfaces.Cargo;
 using KargoTakip.Infrastructure;
+using KargoTakip.Infrastructure.Services.Search;
 using KargoTakip.Persistence;
 using KargoTakip.Persistence.Utilities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -25,6 +27,19 @@ var builder = WebApplication.CreateBuilder(args);
     
 builder.Host.UseSerilog();
 builder.AddServiceDefaults();
+
+// Elasticsearch: Sadece baglanti varsa kaydet (Aspire ile calisirken enjekte edilir); yoksa 500 engellenir
+var elasticsearchConnection = builder.Configuration["ConnectionStrings:elasticsearch"]
+    ?? builder.Configuration["ConnectionStrings__elasticsearch"];
+if (!string.IsNullOrWhiteSpace(elasticsearchConnection))
+{
+    builder.AddElasticsearchClient("elasticsearch");
+    builder.Services.AddScoped<ICargoSearchService, CargoElasticsearchService>();
+}
+else
+{
+    builder.Services.AddScoped<ICargoSearchService, NoOpCargoSearchService>();
+}
 
 builder.Services.AddControllers();
 

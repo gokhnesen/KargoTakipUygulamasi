@@ -34,17 +34,15 @@ namespace KargoTakip.Infrastructure.Services
             _senderName = _configuration["Brevo:SenderName"] ?? "KargoTakip";
 
             if (string.IsNullOrEmpty(_smtpUsername) || string.IsNullOrEmpty(_smtpPassword))
-            {
-                _logger.LogWarning("Brevo SMTP bilgileri yapilandirilmamis!");
-            }
+                _logger.LogWarning("Brevo SMTP bilgileri yapilandirilmamis! Brevo:SmtpUsername ve Brevo:SmtpPassword (API key) gerekli.");
         }
 
         public async Task SendAsync(string email, string subject, string body, string htmlBody)
         {
             if (string.IsNullOrEmpty(_smtpUsername) || string.IsNullOrEmpty(_smtpPassword))
             {
-                _logger.LogWarning("Brevo SMTP bilgileri bulunamadi. Email gonderilemiyor.");
-                return;
+                _logger.LogError("Brevo SMTP bilgileri eksik. OTP/email gonderilmiyor. appsettings.json veya User Secrets icinde Brevo:SmtpUsername ve Brevo:SmtpPassword (Brevo API key) tanimlayin.");
+                throw new InvalidOperationException("Brevo SMTP yapilandirmasi eksik. Brevo:SmtpUsername ve Brevo:SmtpPassword gerekli.");
             }
 
             try
@@ -71,7 +69,7 @@ namespace KargoTakip.Infrastructure.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Email gonderme sirasinda hata olustu. Alici: {Email}", email);
+                _logger.LogError(ex, "Brevo email gonderme hatasi. Alici: {Email}. Brevo panelde gonderici adresin dogrulandigindan emin ol.", email);
                 throw;
             }
         }

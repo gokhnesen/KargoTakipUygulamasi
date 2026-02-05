@@ -21,7 +21,10 @@ namespace KargoTakip.Infrastructure
 
             services.AddMemoryCache();
             services.AddSingleton<ILoginOtpStore, MemoryLoginOtpStore>();
-            services.AddScoped<IEmailService, BrevoEmailService>();
+            if (useBrevo)
+                services.AddScoped<IEmailService, BrevoEmailService>();
+            else
+                services.AddScoped<IEmailService, DummyEmailService>();
             services.AddScoped<ISmsService, DummySmsService>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddSingleton<IEmailQueue, EmailQueueService>();
