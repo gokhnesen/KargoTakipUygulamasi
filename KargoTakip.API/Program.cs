@@ -28,12 +28,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
 builder.AddServiceDefaults();
 
-// Elasticsearch: Sadece baglanti varsa kaydet (Aspire ile calisirken enjekte edilir); yoksa 500 engellenir
+// Elasticsearch: Baglanti varsa client 8.x ile kaydedilir (ES sunucusu 8.x; client 9.x "compatible-with=9" gonderir, sunucu reddeder)
 var elasticsearchConnection = builder.Configuration["ConnectionStrings:elasticsearch"]
     ?? builder.Configuration["ConnectionStrings__elasticsearch"];
 if (!string.IsNullOrWhiteSpace(elasticsearchConnection))
 {
-    builder.AddElasticsearchClient("elasticsearch");
+    builder.Services.AddSingleton(_ =>
+    {
+        var settings = new Elastic.Clients.Elasticsearch.ElasticsearchClientSettings(new Uri(elasticsearchConnection));
+        return new Elastic.Clients.Elasticsearch.ElasticsearchClient(settings);
+    });
     builder.Services.AddScoped<ICargoSearchService, CargoElasticsearchService>();
 }
 else
@@ -113,6 +117,7 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddAuthorization();
 builder.Services.AddHostedService<EmailConsumerHostedService>();
+builder.Services.AddHostedService<ElasticsearchReindexHostedService>();
 
 var app = builder.Build();
 

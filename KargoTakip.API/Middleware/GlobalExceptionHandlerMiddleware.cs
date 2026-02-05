@@ -66,6 +66,13 @@ namespace KargoTakip.API.Middleware
                     _logger.LogWarning("Business exception: {Message}", businessException.Message);
                     break;
 
+                case ExternalServiceException externalServiceException:
+                    context.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                    response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                    response.Message = externalServiceException.Message;
+                    _logger.LogWarning(externalServiceException, "Harici servis hatasi: {Message}", externalServiceException.Message);
+                    break;
+
                 default:
                     context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                     response.StatusCode = (int)HttpStatusCode.InternalServerError;

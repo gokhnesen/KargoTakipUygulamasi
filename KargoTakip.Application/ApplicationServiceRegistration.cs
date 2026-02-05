@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using KargoTakip.Application.Behaviors;
 using KargoTakip.Application.Interfaces.Cargo;
 using KargoTakip.Application.Interfaces.Notification;
@@ -21,6 +21,7 @@ namespace KargoTakip.Application
             services.AddScoped<CargoStatusHelper>();
             services.AddScoped<EmailTemplateBuilder>();
             services.AddScoped<TrackingNumberGenerator>();
+            services.AddScoped<ICargoSearchManager, CargoSearchManager>();
 
             return services;
         }

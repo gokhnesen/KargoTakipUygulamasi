@@ -101,8 +101,7 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
                 var searchTermRaw = filterParams.SearchTerm.Trim();
                 var searchTermLower = searchTermRaw.ToLower();
                 criteria = CombineExpressions(criteria, c =>
-                    c.TrackingNumber == searchTermRaw ||
-                    c.TrackingNumber.StartsWith(searchTermRaw) ||
+                    (c.TrackingNumber != null && (c.TrackingNumber.ToLower() == searchTermLower || c.TrackingNumber.ToLower().StartsWith(searchTermLower) || c.TrackingNumber.ToLower().Contains(searchTermLower))) ||
                     (c.Sender != null && c.Sender.FullName.ToLower().Contains(searchTermLower)) ||
                     (c.Receiver != null && (c.Receiver.Name + " " + c.Receiver.Surname).ToLower().Contains(searchTermLower)) ||
                     (c.Receiver != null && c.Receiver.Email != null && c.Receiver.Email.ToLower().Contains(searchTermLower))

@@ -106,37 +106,29 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.UpdateCargoMove
 
         private async Task<bool> SendNotificationToReceiverAsync(Domain.Entities.Cargo cargo, UpdateCargoMovementCommand request, CancellationToken cancellationToken)
         {
-            try
+            var receiver = await _receiverRepository.GetValueByExpressionAsync(r => r.Id == cargo.ReceiverId);
+            if (receiver == null)
             {
-                var receiver = await _receiverRepository.GetValueByExpressionAsync(r => r.Id == cargo.ReceiverId);
-                if (receiver == null)
-                {
-                    _logger.LogWarning("Alici bilgisi bulunamadi. ReceiverId: {ReceiverId}", cargo.ReceiverId);
-                    return false;
-                }
-
-                var statusMessage = _statusHelper.GetStatusMessage(request.NewStatus);
-                var emailSubject = $"Kargo Durum Guncellemesi - {cargo.TrackingNumber}";
-                var emailBody = _emailTemplateBuilder.BuildCargoStatusUpdateEmail(
-                    receiver, cargo, statusMessage, request.Location, request.Description);
-
-                await _emailQueue.PublishAsync(new SendEmailMessage
-                {
-                    Email = receiver.Email,
-                    Subject = emailSubject,
-                    PlainBody = emailBody,
-                    HtmlBody = emailBody,
-                    MessageType = "KargoDurumGuncelleme"
-                }, cancellationToken);
-                _logger.LogInformation("Email kuyruga eklendi. Email: {Email}", receiver.Email);
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Bildirim kuyruga eklenirken hata olustu. CargoId: {CargoId}", cargo.Id);
+                _logger.LogWarning("Alici bilgisi bulunamadi. ReceiverId: {ReceiverId}", cargo.ReceiverId);
                 return false;
             }
+
+            var statusMessage = _statusHelper.GetStatusMessage(request.NewStatus);
+            var emailSubject = $"Kargo Durum Guncellemesi - {cargo.TrackingNumber}";
+            var emailBody = _emailTemplateBuilder.BuildCargoStatusUpdateEmail(
+                receiver, cargo, statusMessage, request.Location, request.Description);
+
+            await _emailQueue.PublishAsync(new SendEmailMessage
+            {
+                Email = receiver.Email,
+                Subject = emailSubject,
+                PlainBody = emailBody,
+                HtmlBody = emailBody,
+                MessageType = "KargoDurumGuncelleme"
+            }, cancellationToken);
+            _logger.LogInformation("Email kuyruga eklendi. Email: {Email}", receiver.Email);
+
+            return true;
         }
     }
 }

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { CargoServices } from '../../core/services/cargoServices.service';
 import { LoginServices } from '../../core/services/loginServices.service';
 import { Cargo } from '../../shared/Cargo';
@@ -80,12 +80,28 @@ export class CargoManagementComponent implements OnInit {
     private router: Router
   ) {
     this.searchSubject.pipe(
-      debounceTime(500),
-      distinctUntilChanged()
-    ).subscribe(term => {
-      this.filterParams.searchTerm = term;
-      this.filterParams.pageIndex = 1;
-      this.loadCargos();
+      debounceTime(600),
+      distinctUntilChanged(),
+      switchMap(term => {
+        this.filterParams.searchTerm = term || undefined;
+        this.filterParams.pageIndex = 1;
+        this.loading.list = true;
+        this.error = '';
+        return this.cargoService.getAll(this.filterParams);
+      })
+    ).subscribe({
+      next: (response) => {
+        this.cargos = response.items;
+        this.filteredCargos = response.items;
+        this.totalCount = response.totalCount >= 0 ? response.totalCount : 0;
+        this.totalPages = response.totalPages > 0 ? response.totalPages : 1;
+        this.filterParams.pageIndex = response.pageIndex ?? 1;
+        this.loading.list = false;
+      },
+      error: (err) => {
+        this.error = err?.message ?? 'Kargolar yüklenirken hata oluştu.';
+        this.loading.list = false;
+      }
     });
   }
 

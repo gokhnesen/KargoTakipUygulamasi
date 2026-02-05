@@ -1,3 +1,4 @@
+using KargoTakip.Application.Helpers;
 using KargoTakip.Domain.Enums;
 using MediatR;
 using System;
@@ -5,7 +6,7 @@ using System.Collections.Generic;
 
 namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
 {
-    public class GetAllCargosQuery : IRequest<GetAllCargosQueryResult>
+    public class GetAllCargosQuery : BasePagedRequest, IRequest<GetAllCargosQueryResult>
     {
         public int? Status { get; set; }
         public string? TrackingNumber { get; set; }
@@ -18,9 +19,6 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
 
         public string? OrderBy { get; set; } = "date";
         public bool IsDescending { get; set; } = true;
-
-        public int PageIndex { get; set; } = 1;
-        public int PageSize { get; set; } = 50;
 
         public bool UseKeysetPagination { get; set; } = false;
         public DateTime? CursorCreatedDate { get; set; }

@@ -33,39 +33,30 @@ namespace KargoTakip.Persistence.Utilities
 
             var sw = Stopwatch.StartNew();
 
-            try
+            await SeedCargoSendersAndReceivers();
+
+            var senderIds = await _context.CargoSenders
+                .AsNoTracking()
+                .Select(s => s.Id)
+                .ToListAsync();
+
+            var receiverIds = await _context.CargoReceivers
+                .AsNoTracking()
+                .Select(r => r.Id)
+                .ToListAsync();
+
+            if (!senderIds.Any() || !receiverIds.Any())
             {
-                await SeedCargoSendersAndReceivers();
-
-                var senderIds = await _context.CargoSenders
-                    .AsNoTracking()
-                    .Select(s => s.Id)
-                    .ToListAsync();
-
-                var receiverIds = await _context.CargoReceivers
-                    .AsNoTracking()
-                    .Select(r => r.Id)
-                    .ToListAsync();
-
-                if (!senderIds.Any() || !receiverIds.Any())
-                {
-                    Console.WriteLine("❌ No senders or receivers found.");
-                    return;
-                }
-
-                await BulkInsertCargos(totalCargos, senderIds, receiverIds);
-
-                await BulkInsertCargoMovements(movementsPerCargo);
-
-                sw.Stop();
-                Console.WriteLine($"✅ Seeding completed successfully in {sw.Elapsed.TotalSeconds:F2} seconds!");
+                Console.WriteLine("❌ No senders or receivers found.");
+                return;
             }
-            catch (Exception ex)
-            {
-                sw.Stop();
-                Console.WriteLine($"❌ Seeding failed: {ex.Message}");
-                throw;
-            }
+
+            await BulkInsertCargos(totalCargos, senderIds, receiverIds);
+
+            await BulkInsertCargoMovements(movementsPerCargo);
+
+            sw.Stop();
+            Console.WriteLine($"✅ Seeding completed successfully in {sw.Elapsed.TotalSeconds:F2} seconds!");
         }
 
         private async Task SeedCargoSendersAndReceivers()
@@ -264,20 +255,12 @@ namespace KargoTakip.Persistence.Utilities
         {
             Console.WriteLine("🗑️  Clearing all cargo data...");
 
-            try
-            {
-                await _context.Database.ExecuteSqlRawAsync("DELETE FROM CargoMovements");
-                await _context.Database.ExecuteSqlRawAsync("DELETE FROM Cargos");
-                await _context.Database.ExecuteSqlRawAsync("DELETE FROM CargoReceivers");
-                await _context.Database.ExecuteSqlRawAsync("DELETE FROM CargoSenders");
+            await _context.Database.ExecuteSqlRawAsync("DELETE FROM CargoMovements");
+            await _context.Database.ExecuteSqlRawAsync("DELETE FROM Cargos");
+            await _context.Database.ExecuteSqlRawAsync("DELETE FROM CargoReceivers");
+            await _context.Database.ExecuteSqlRawAsync("DELETE FROM CargoSenders");
 
-                Console.WriteLine("✅ All cargo data cleared");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Error clearing data: {ex.Message}");
-                throw;
-            }
+            Console.WriteLine("✅ All cargo data cleared");
         }
     }
 }

@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace KargoTakip.Application.Specifications.CargoSpecifications
 {
+    /// <summary>
+    /// Verilen ID listesiyle tek sorguda IN clause kullanarak yükleme; GetIdsWithSpecAsync sonrası tek round-trip ile N+1 önlenir.
+    /// </summary>
     public class CargoByIdsSpecification : BaseSpecification<Cargo>
     {
         public CargoByIdsSpecification(IReadOnlyList<string> ids, bool includeMovements = false)

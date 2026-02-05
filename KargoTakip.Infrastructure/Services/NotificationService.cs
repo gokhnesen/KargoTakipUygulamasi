@@ -1,4 +1,4 @@
-﻿using KargoTakip.Application.Interfaces.Notification;
+using KargoTakip.Application.Interfaces.Notification;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -24,30 +24,14 @@ namespace KargoTakip.Infrastructure.Services
 
         public async Task SendEmailAsync(string email, string subject, string body)
         {
-            try
-            {
-                await _emailService.SendAsync(email, subject, body, body);
-                _logger.LogInformation("Email basariyla gonderildi. Email: {Email}", email);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Email gonderme hatasi. Email: {Email}", email);
-                throw;
-            }
+            await _emailService.SendAsync(email, subject, body, body);
+            _logger.LogInformation("Email basariyla gonderildi. Email: {Email}", email);
         }
 
         public async Task SendSmsAsync(string phoneNumber, string message)
         {
-            try
-            {
-                await _smsService.SendAsync(phoneNumber, message);
-                _logger.LogInformation("SMS basariyla gonderildi. Telefon: {Phone}", phoneNumber);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "SMS gonderme hatasi. Telefon: {Phone}", phoneNumber);
-                throw;
-            }
+            await _smsService.SendAsync(phoneNumber, message);
+            _logger.LogInformation("SMS basariyla gonderildi. Telefon: {Phone}", phoneNumber);
         }
     }
 }

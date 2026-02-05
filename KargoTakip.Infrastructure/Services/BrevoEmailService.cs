@@ -45,33 +45,25 @@ namespace KargoTakip.Infrastructure.Services
                 throw new InvalidOperationException("Brevo SMTP yapilandirmasi eksik. Brevo:SmtpUsername ve Brevo:SmtpPassword gerekli.");
             }
 
-            try
+            using var smtpClient = new SmtpClient(_smtpServer, _smtpPort)
             {
-                using var smtpClient = new SmtpClient(_smtpServer, _smtpPort)
-                {
-                    EnableSsl = true,
-                    Credentials = new NetworkCredential(_smtpUsername, _smtpPassword)
-                };
+                EnableSsl = true,
+                Credentials = new NetworkCredential(_smtpUsername, _smtpPassword)
+            };
 
-                var mailMessage = new MailMessage
-                {
-                    From = new MailAddress(_senderEmail, _senderName),
-                    Subject = subject,
-                    Body = string.IsNullOrEmpty(htmlBody) ? body : htmlBody,
-                    IsBodyHtml = !string.IsNullOrEmpty(htmlBody)
-                };
-
-                mailMessage.To.Add(email);
-
-                await smtpClient.SendMailAsync(mailMessage);
-
-                _logger.LogInformation("Email basariyla gonderildi. Alici: {Email}", email);
-            }
-            catch (Exception ex)
+            var mailMessage = new MailMessage
             {
-                _logger.LogError(ex, "Brevo email gonderme hatasi. Alici: {Email}. Brevo panelde gonderici adresin dogrulandigindan emin ol.", email);
-                throw;
-            }
+                From = new MailAddress(_senderEmail, _senderName),
+                Subject = subject,
+                Body = string.IsNullOrEmpty(htmlBody) ? body : htmlBody,
+                IsBodyHtml = !string.IsNullOrEmpty(htmlBody)
+            };
+
+            mailMessage.To.Add(email);
+
+            await smtpClient.SendMailAsync(mailMessage);
+
+            _logger.LogInformation("Email basariyla gonderildi. Alici: {Email}", email);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using KargoTakip.Application.Exceptions;
+using KargoTakip.Application.Exceptions;
 using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.Cargo;
 using KargoTakip.Application.Interfaces.Notification;
@@ -90,30 +90,22 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.Create
 
         private async Task<bool> SendNotificationToReceiverAsync(Domain.Entities.Cargo cargo, CreateCargoMovementCommand request)
         {
-            try
+            var receiver = await _receiverRepository.GetValueByExpressionAsync(r => r.Id == cargo.ReceiverId);
+            if (receiver == null)
             {
-                var receiver = await _receiverRepository.GetValueByExpressionAsync(r => r.Id == cargo.ReceiverId);
-                if (receiver == null)
-                {
-                    _logger.LogWarning("Alici bilgisi bulunamadi. ReceiverId: {ReceiverId}", cargo.ReceiverId);
-                    return false;
-                }
-
-                var statusMessage = _statusHelper.GetStatusMessage(request.NewStatus);
-                var emailSubject = $"Kargo Durum Guncellemesi - {cargo.TrackingNumber}";
-                var emailBody = _emailTemplateBuilder.BuildCargoStatusUpdateEmail(
-                    receiver, cargo, statusMessage, request.Location, request.Description);
-
-                await _notificationService.SendEmailAsync(receiver.Email, emailSubject, emailBody);
-                _logger.LogInformation("Email gonderildi. Email: {Email}", receiver.Email);
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Bildirim gonderilirken hata olustu. CargoId: {CargoId}", cargo.Id);
+                _logger.LogWarning("Alici bilgisi bulunamadi. ReceiverId: {ReceiverId}", cargo.ReceiverId);
                 return false;
             }
+
+            var statusMessage = _statusHelper.GetStatusMessage(request.NewStatus);
+            var emailSubject = $"Kargo Durum Guncellemesi - {cargo.TrackingNumber}";
+            var emailBody = _emailTemplateBuilder.BuildCargoStatusUpdateEmail(
+                receiver, cargo, statusMessage, request.Location, request.Description);
+
+            await _notificationService.SendEmailAsync(receiver.Email, emailSubject, emailBody);
+            _logger.LogInformation("Email gonderildi. Email: {Email}", receiver.Email);
+
+            return true;
         }
     }
 }

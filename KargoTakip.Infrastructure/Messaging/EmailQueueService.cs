@@ -27,18 +27,10 @@ namespace KargoTakip.Infrastructure.Messaging
 
         private IConnection CreateConnection()
         {
-            try
-            {
-                var factory = RabbitMQConnectionFactory.CreateFromConfiguration(_configuration);
-                var connection = factory.CreateConnection();
-                _logger.LogInformation("RabbitMQ connection established.");
-                return connection;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to create RabbitMQ connection.");
-                throw;
-            }
+            var factory = RabbitMQConnectionFactory.CreateFromConfiguration(_configuration);
+            var connection = factory.CreateConnection();
+            _logger.LogInformation("RabbitMQ connection established.");
+            return connection;
         }
 
         public Task PublishAsync(SendEmailMessage message, CancellationToken cancellationToken = default)
@@ -48,27 +40,19 @@ namespace KargoTakip.Infrastructure.Messaging
             if (string.IsNullOrWhiteSpace(message.Email))
                 throw new ArgumentException("Email is required.", nameof(message));
 
-            try
-            {
-                using var channel = _connectionLazy.Value.CreateModel();
-                var queueName = _configuration["RabbitMQ:QueueName"] ?? "email-send";
-                channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+            using var channel = _connectionLazy.Value.CreateModel();
+            var queueName = _configuration["RabbitMQ:QueueName"] ?? "email-send";
+            channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
 
-                var json = JsonSerializer.Serialize(message);
-                var body = Encoding.UTF8.GetBytes(json);
+            var json = JsonSerializer.Serialize(message);
+            var body = Encoding.UTF8.GetBytes(json);
 
-                var properties = channel.CreateBasicProperties();
-                properties.Persistent = true;
-                properties.ContentType = "application/json";
+            var properties = channel.CreateBasicProperties();
+            properties.Persistent = true;
+            properties.ContentType = "application/json";
 
-                channel.BasicPublish(exchange: "", routingKey: queueName, basicProperties: properties, body: body);
-                _logger.LogInformation("Mail RabbitMQ kuyruguna gonderildi. Alici: {Email}, Tip: {MessageType}, Kuyruk: {QueueName}", message.Email, message.MessageType ?? "Unknown", queueName);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to publish email message to queue. Email: {Email}", message.Email);
-                throw;
-            }
+            channel.BasicPublish(exchange: "", routingKey: queueName, basicProperties: properties, body: body);
+            _logger.LogInformation("Mail RabbitMQ kuyruguna gonderildi. Alici: {Email}, Tip: {MessageType}, Kuyruk: {QueueName}", message.Email, message.MessageType ?? "Unknown", queueName);
 
             return Task.CompletedTask;
         }
@@ -78,8 +62,8 @@ namespace KargoTakip.Infrastructure.Messaging
             if (_disposed) return;
             if (_connectionLazy.IsValueCreated)
             {
-                try { _connectionLazy.Value.Close(); } catch { /* ignore */ }
-                try { _connectionLazy.Value.Dispose(); } catch { /* ignore */ }
+                _connectionLazy.Value.Close();
+                _connectionLazy.Value.Dispose();
             }
             _disposed = true;
             GC.SuppressFinalize(this);

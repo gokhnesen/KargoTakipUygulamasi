@@ -32,47 +32,33 @@ namespace KargoTakip.API.HostedServices
             _logger = logger;
         }
 
-        private const int MaxConnectionRetries = 10;
-        private const int ConnectionRetryDelayMs = 3000;
+        private const int ConnectionRetrySeconds = 5;
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            for (int attempt = 1; attempt <= MaxConnectionRetries; attempt++)
-            {
-                if (stoppingToken.IsCancellationRequested)
-                    return;
+            var factory = RabbitMQConnectionFactory.CreateFromConfiguration(_configuration);
+            var queueName = _configuration["RabbitMQ:QueueName"] ?? "email-send";
 
+            while (!stoppingToken.IsCancellationRequested)
+            {
                 try
                 {
-                    var factory = RabbitMQConnectionFactory.CreateFromConfiguration(_configuration);
                     _connection = factory.CreateConnection();
                     _channel = _connection.CreateModel();
-
-                    var queueName = _configuration["RabbitMQ:QueueName"] ?? "email-send";
                     _channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
 
                     var consumer = new AsyncEventingBasicConsumer(_channel);
                     consumer.Received += OnMessageReceivedAsync;
-
                     _channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
-                    _logger.LogInformation("Email consumer baslatildi. Kuyruk: {QueueName}. Mail istekleri kullaniciya gonderilecek.", queueName);
 
+                    _logger.LogInformation("Email consumer baslatildi. Kuyruk: {QueueName}. Mail istekleri kullaniciya gonderilecek.", queueName);
                     await Task.Delay(Timeout.Infinite, stoppingToken).ConfigureAwait(false);
-                    return;
-                }
-                catch (OperationCanceledException)
-                {
                     return;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "RabbitMQ baglantisi basarisiz (deneme {Attempt}/{Max}). {Delay}s sonra tekrar denenecek.", attempt, MaxConnectionRetries, ConnectionRetryDelayMs / 1000);
-                    if (attempt == MaxConnectionRetries)
-                    {
-                        _logger.LogError(ex, "Email consumer baslatilamadi. Mail gonderimi calismayacak.");
-                        return;
-                    }
-                    await Task.Delay(ConnectionRetryDelayMs, stoppingToken).ConfigureAwait(false);
+                    _logger.LogWarning(ex, "RabbitMQ baglantisi kurulamadi (Aspire ile RabbitMQ gec basiliyor olabilir). {Seconds} saniye sonra tekrar denenecek.", ConnectionRetrySeconds);
+                    await Task.Delay(TimeSpan.FromSeconds(ConnectionRetrySeconds), stoppingToken).ConfigureAwait(false);
                 }
             }
         }
@@ -80,63 +66,40 @@ namespace KargoTakip.API.HostedServices
         private async Task OnMessageReceivedAsync(object sender, BasicDeliverEventArgs ea)
         {
             var channel = ((AsyncEventingBasicConsumer)sender).Model;
-            SendEmailMessage? message = null;
-            try
+            var body = ea.Body.ToArray();
+            var json = Encoding.UTF8.GetString(body);
+            var message = JsonSerializer.Deserialize<SendEmailMessage>(json);
+
+            if (message == null || string.IsNullOrWhiteSpace(message.Email))
             {
-                var body = ea.Body.ToArray();
-                var json = Encoding.UTF8.GetString(body);
-                message = JsonSerializer.Deserialize<SendEmailMessage>(json);
-
-                if (message == null || string.IsNullOrWhiteSpace(message.Email))
-                {
-                    _logger.LogWarning("Invalid email message received (null or empty email). Nacking.");
-                    channel.BasicNack(ea.DeliveryTag, false, false);
-                    return;
-                }
-
-                using var scope = _scopeFactory.CreateScope();
-                var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
-                var htmlBody = message.HtmlBody ?? message.PlainBody;
-                _logger.LogInformation("Mail kuyruktan alindi, kullaniciya gonderiliyor: {Email}, Tip: {MessageType}", message.Email, message.MessageType ?? "Unknown");
-                await emailService.SendAsync(message.Email, message.Subject, message.PlainBody, htmlBody).ConfigureAwait(false);
-
-                channel.BasicAck(ea.DeliveryTag, false);
-                _logger.LogInformation("Mail kullaniciya gonderildi ve kuyruktan silindi. Alici: {Email}, Tip: {MessageType}", message.Email, message.MessageType ?? "Unknown");
+                _logger.LogWarning("Invalid email message received (null or empty email). Nacking.");
+                channel.BasicNack(ea.DeliveryTag, false, false);
+                return;
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing email message. Nacking (requeue=false). Email: {Email}", message?.Email ?? "(unknown)");
-                try
-                {
-                    channel.BasicNack(ea.DeliveryTag, false, false);
-                }
-                catch (Exception nackEx)
-                {
-                    _logger.LogError(nackEx, "Failed to Nack message.");
-                }
-            }
+
+            using var scope = _scopeFactory.CreateScope();
+            var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+            var htmlBody = message.HtmlBody ?? message.PlainBody;
+            _logger.LogInformation("Mail kuyruktan alindi, kullaniciya gonderiliyor: {Email}, Tip: {MessageType}", message.Email, message.MessageType ?? "Unknown");
+            await emailService.SendAsync(message.Email, message.Subject, message.PlainBody, htmlBody).ConfigureAwait(false);
+
+            channel.BasicAck(ea.DeliveryTag, false);
+            _logger.LogInformation("Mail kullaniciya gonderildi ve kuyruktan silindi. Alici: {Email}, Tip: {MessageType}", message.Email, message.MessageType ?? "Unknown");
 
             await Task.CompletedTask.ConfigureAwait(false);
         }
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            try
+            if (_channel != null)
             {
-                if (_channel != null)
-                {
-                    _channel.Close();
-                    _channel.Dispose();
-                }
-                if (_connection != null)
-                {
-                    _connection.Close();
-                    _connection.Dispose();
-                }
+                _channel.Close();
+                _channel.Dispose();
             }
-            catch (Exception ex)
+            if (_connection != null)
             {
-                _logger.LogWarning(ex, "Error closing RabbitMQ consumer.");
+                _connection.Close();
+                _connection.Dispose();
             }
             await base.StopAsync(cancellationToken).ConfigureAwait(false);
         }
