@@ -66,6 +66,7 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.Create
             }
 
             cargo.Status = request.NewStatus;
+            cargo.LastLocation = request.Location;
             await _cargoRepository.UpdateAsync(cargo);
 
             _logger.LogInformation("Kargo hareketi kaydedildi. MovementId: {MovementId}", createdMovement.Id);

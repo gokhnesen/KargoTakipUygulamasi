@@ -1,6 +1,5 @@
 using KargoTakip.Application.Exceptions;
 using KargoTakip.Application.Interfaces;
-using KargoTakip.Application.Interfaces.Cargo;
 using KargoTakip.Application.Services;
 using KargoTakip.Domain.Entities;
 using MediatR;
@@ -17,7 +16,6 @@ namespace KargoTakip.Application.Features.Cargo.Commands.Create
         private readonly IGenericRepository<Domain.Entities.Cargo> _cargoRepository;
         private readonly IGenericRepository<CargoSender> _senderRepository;
         private readonly IGenericRepository<CargoReceiver> _receiverRepository;
-        private readonly ICargoSearchService _cargoSearchService;
         private readonly ILogger<CreateCargoCommandHandler> _logger;
         private readonly TrackingNumberGenerator _trackingNumberGenerator;
 
@@ -25,14 +23,12 @@ namespace KargoTakip.Application.Features.Cargo.Commands.Create
             IGenericRepository<Domain.Entities.Cargo> cargoRepository,
             IGenericRepository<CargoSender> senderRepository,
             IGenericRepository<CargoReceiver> receiverRepository,
-            ICargoSearchService cargoSearchService,
             ILogger<CreateCargoCommandHandler> logger,
             TrackingNumberGenerator trackingNumberGenerator)
         {
             _cargoRepository = cargoRepository;
             _senderRepository = senderRepository;
             _receiverRepository = receiverRepository;
-            _cargoSearchService = cargoSearchService;
             _logger = logger;
             _trackingNumberGenerator = trackingNumberGenerator;
         }
@@ -100,22 +96,6 @@ namespace KargoTakip.Application.Features.Cargo.Commands.Create
             }
 
             _logger.LogInformation("Kargo basariyla olusturuldu. Takip No: {TrackingNumber}", trackingNumber);
-
-            var searchDoc = new CargoSearchDocument
-            {
-                Id = createdCargo.Id,
-                TrackingNumber = createdCargo.TrackingNumber,
-                SenderFullName = createdSender.FullName ?? string.Empty,
-                SenderAddress = createdSender.FullAddress ?? string.Empty,
-                SenderPhone = createdSender.PhoneNumber ?? string.Empty,
-                ReceiverFullName = $"{createdReceiver.Name} {createdReceiver.Surname}".Trim(),
-                ReceiverEmail = createdReceiver.Email ?? string.Empty,
-                ReceiverAddress = createdReceiver.FullAddress ?? string.Empty,
-                ReceiverPhone = createdReceiver.PhoneNumber ?? string.Empty,
-                Status = (int)createdCargo.Status,
-                CreatedDate = createdCargo.CreatedDate
-            };
-            await _cargoSearchService.IndexAsync(searchDoc, cancellationToken);
 
             return new CreateCargoCommandResponse
             {

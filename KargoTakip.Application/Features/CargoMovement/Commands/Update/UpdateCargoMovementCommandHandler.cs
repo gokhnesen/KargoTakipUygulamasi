@@ -78,6 +78,7 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.UpdateCargoMove
             _logger.LogDebug("Kargo hareketi kaydedildi. MovementId: {MovementId}", createdMovement.Id);
 
             cargo.Status = request.NewStatus;
+            cargo.LastLocation = request.Location;
             cargo.UpdatedDate = DateTime.Now;
 
             var updatedCargo = await _cargoRepository.UpdateAsync(cargo);

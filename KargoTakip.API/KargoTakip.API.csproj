@@ -26,7 +26,6 @@
 		<PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
 		<PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
-		<PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.10" />
 	</ItemGroup>
 
 	<ItemGroup>

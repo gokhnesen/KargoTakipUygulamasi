@@ -96,45 +96,54 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
                 criteria = CombineExpressions(criteria, c => c.Status == status);
             }
 
+            // SearchTermTrackingOnly=true: sadece TrackingNumber uzerinden filtrele (JOIN yok, IX_Cargos_TrackingNumber kullanilir).
             if (!string.IsNullOrEmpty(filterParams.SearchTerm))
             {
-                var searchTermRaw = filterParams.SearchTerm.Trim();
-                var searchTermLower = searchTermRaw.ToLower();
-                criteria = CombineExpressions(criteria, c =>
-                    (c.TrackingNumber != null && (c.TrackingNumber.ToLower() == searchTermLower || c.TrackingNumber.ToLower().StartsWith(searchTermLower) || c.TrackingNumber.ToLower().Contains(searchTermLower))) ||
-                    (c.Sender != null && c.Sender.FullName.ToLower().Contains(searchTermLower)) ||
-                    (c.Receiver != null && (c.Receiver.Name + " " + c.Receiver.Surname).ToLower().Contains(searchTermLower)) ||
-                    (c.Receiver != null && c.Receiver.Email != null && c.Receiver.Email.ToLower().Contains(searchTermLower))
-                );
+                var searchTerm = filterParams.SearchTerm.Trim();
+                if (filterParams.SearchTermTrackingOnly)
+                {
+                    criteria = CombineExpressions(criteria, c =>
+                        c.TrackingNumber != null &&
+                        (c.TrackingNumber.StartsWith(searchTerm) || c.TrackingNumber.Contains(searchTerm)));
+                }
+                else
+                {
+                    // StartsWith kullanimi: LIKE 'term%' indeks kullanir; Contains (LIKE '%term%') full scan yapar. Arama baslangictan eslesir (ser -> serhan).
+                    criteria = CombineExpressions(criteria, c =>
+                        (c.TrackingNumber != null && (c.TrackingNumber == searchTerm || c.TrackingNumber.StartsWith(searchTerm) || c.TrackingNumber.Contains(searchTerm))) ||
+                        (c.Sender != null && c.Sender.FullName != null && c.Sender.FullName.StartsWith(searchTerm)) ||
+                        (c.Receiver != null && ((c.Receiver.Name != null && c.Receiver.Name.StartsWith(searchTerm)) || (c.Receiver.Surname != null && c.Receiver.Surname.StartsWith(searchTerm)) || (c.Receiver.Name + " " + c.Receiver.Surname).StartsWith(searchTerm))) ||
+                        (c.Receiver != null && c.Receiver.Email != null && c.Receiver.Email.StartsWith(searchTerm))
+                    );
+                }
             }
 
             if (!string.IsNullOrEmpty(filterParams.TrackingNumber))
             {
                 var trackingNumber = filterParams.TrackingNumber.Trim();
-                criteria = CombineExpressions(criteria, c => c.TrackingNumber.StartsWith(trackingNumber));
+                criteria = CombineExpressions(criteria, c => c.TrackingNumber != null && c.TrackingNumber.StartsWith(trackingNumber));
             }
 
             if (!string.IsNullOrEmpty(filterParams.SenderName))
             {
-                var senderName = filterParams.SenderName.ToLower();
+                var senderName = filterParams.SenderName.Trim();
                 criteria = CombineExpressions(criteria, c =>
-                    c.Sender != null && c.Sender.FullName.ToLower().Contains(senderName));
+                    c.Sender != null && c.Sender.FullName != null && c.Sender.FullName.Contains(senderName));
             }
 
             if (!string.IsNullOrEmpty(filterParams.ReceiverName))
             {
-                var receiverName = filterParams.ReceiverName.ToLower();
+                var receiverName = filterParams.ReceiverName.Trim();
                 criteria = CombineExpressions(criteria, c =>
                     c.Receiver != null &&
-                    (c.Receiver.Name + " " + c.Receiver.Surname).ToLower().Contains(receiverName));
+                    (c.Receiver.Name + " " + c.Receiver.Surname).Contains(receiverName));
             }
 
             if (!string.IsNullOrEmpty(filterParams.ReceiverEmail))
             {
-                var receiverEmail = filterParams.ReceiverEmail.ToLower();
+                var receiverEmail = filterParams.ReceiverEmail.Trim();
                 criteria = CombineExpressions(criteria, c =>
-                    c.Receiver != null &&
-                    c.Receiver.Email.ToLower().Contains(receiverEmail));
+                    c.Receiver != null && c.Receiver.Email != null && c.Receiver.Email.Contains(receiverEmail));
             }
 
             if (filterParams.StartDate.HasValue)
@@ -227,5 +236,7 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
         public string? CursorId { get; set; }
         public bool IsCount { get; set; } = false;
         public bool SkipIncludes { get; set; } = false;
+        /// <summary>SearchTerm sadece TrackingNumber uzerinde aranir (Sender/Receiver JOIN yok, indeks kullanimi).</summary>
+        public bool SearchTermTrackingOnly { get; set; } = false;
     }
 }

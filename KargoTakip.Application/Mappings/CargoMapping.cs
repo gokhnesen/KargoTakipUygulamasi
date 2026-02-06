@@ -13,7 +13,8 @@ namespace KargoTakip.Application.Mappings
     {
         private const string UnknownDisplay = "Bilinmiyor";
 
-        public static GetAllCargosQueryResponse ToGetAllCargosQueryResponse(this Cargo c, bool includeMovements)
+        /// <summary>Liste cevabi: sadece LastLocation doner, Movements donmez.</summary>
+        public static GetAllCargosQueryResponse ToGetAllCargosQueryResponse(this Cargo c)
         {
             return new GetAllCargosQueryResponse
             {
@@ -30,9 +31,7 @@ namespace KargoTakip.Application.Mappings
                 Status = c.Status,
                 CreatedDate = c.CreatedDate,
                 UpdatedDate = c.UpdatedDate,
-                Movements = includeMovements
-                    ? (c.Movements?.OrderByDescending(m => m.CreatedDate).Select(m => m.ToCargoMovementDto()).ToList() ?? new List<CargoMovementDto>())
-                    : new List<CargoMovementDto>()
+                LastLocation = c.LastLocation ?? c.Movements?.OrderByDescending(m => m.CreatedDate).FirstOrDefault()?.Location
             };
         }
 

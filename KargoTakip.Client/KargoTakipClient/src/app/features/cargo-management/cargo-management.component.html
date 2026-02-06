@@ -121,7 +121,7 @@
           <div class="details-right">
             <div class="detail-section">
               <h4>📍 Konum & Tarih</h4>
-              <p class="current-location"><strong>Şuanki Konum:</strong><br>{{ cargo.currentLocation || (cargo.movements
+              <p class="current-location"><strong>Şuanki Konum:</strong><br>{{ cargo.lastLocation || cargo.currentLocation || (cargo.movements
                 && cargo.movements.length > 0 ? cargo.movements[0].location : 'Bilinmiyor') }}</p>
               <p><strong>Oluşturulma:</strong> {{ (cargo.createdDate) | date:'dd.MM.yyyy HH:mm':'':'tr-TR' }}</p>
               <p><strong>Son Güncelleme:</strong> {{ (cargo.updatedDate) | date:'dd.MM.yyyy HH:mm':'':'tr-TR' }}</p>

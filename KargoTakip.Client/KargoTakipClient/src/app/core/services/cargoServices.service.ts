@@ -97,7 +97,9 @@ export class CargoServices {
   }
 
   getCargoMovements(cargoId: string): Observable<CargoMovement[]> {
-    return this.http.get<CargoMovement[]>(`${this.baseUrl}/${cargoId}/movements`);
+    return this.http.get<{ movements: CargoMovement[] }>(`${this.baseUrl}/${cargoId}/movements`).pipe(
+      map(res => res?.movements ?? [])
+    );
   }
 
   trackCargo(trackingNumber: string): Observable<any> {

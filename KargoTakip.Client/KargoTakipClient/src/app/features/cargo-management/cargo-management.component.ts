@@ -26,7 +26,6 @@ export class CargoManagementComponent implements OnInit {
   filterParams: CargoFilterParams = {
     pageSize: 10,
     pageIndex: 1,
-    includeMovements: true,
     includeTotalCount: true
   };
 
@@ -212,13 +211,21 @@ export class CargoManagementComponent implements OnInit {
 
   openUpdateModal(cargo: Cargo): void {
     this.selectedCargo = cargo;
-    this.selectedCargoMovements = cargo.movements || [];
+    this.selectedCargoMovements = [];
     this.newStatus = cargo.status;
     this.newLocation = '';
     this.newDescription = '';
     this.successMessage = null;
     this.validationError = null;
     this.showUpdateModal = true;
+    this.cargoService.getCargoMovements(cargo.id).subscribe({
+      next: (movements) => {
+        this.selectedCargoMovements = movements ?? [];
+      },
+      error: () => {
+        this.selectedCargoMovements = [];
+      }
+    });
   }
 
   closeUpdateModal(): void {

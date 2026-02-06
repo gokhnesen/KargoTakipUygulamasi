@@ -68,6 +68,8 @@ namespace KargoTakip.Persistence.DatabaseContext
                 entity.HasIndex(c => c.Status)
                       .HasDatabaseName("IX_Cargos_Status")
                       .HasFilter("[IsDeleted] = 0");
+
+                entity.Property(c => c.LastLocation).HasMaxLength(256);
             });
 
             modelBuilder.Entity<CargoMovement>(entity =>

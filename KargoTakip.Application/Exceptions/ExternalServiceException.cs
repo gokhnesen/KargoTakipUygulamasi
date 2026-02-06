@@ -3,7 +3,7 @@ using System;
 namespace KargoTakip.Application.Exceptions
 {
     /// <summary>
-    /// Harici servis (Elasticsearch, RabbitMQ, e-posta sağlayıcı vb.) hatalarında fırlatılır.
+    /// Harici servis (RabbitMQ, e-posta sağlayıcı vb.) hatalarında fırlatılır.
     /// </summary>
     public class ExternalServiceException : Exception
     {
