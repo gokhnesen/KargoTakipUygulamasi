@@ -1,13 +1,12 @@
 using KargoTakip.Application.Exceptions;
+using KargoTakip.Application.Helpers.Cargo;
 using KargoTakip.Application.Interfaces;
-using KargoTakip.Application.Services;
 using KargoTakip.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace KargoTakip.Application.Features.Cargo.Commands.Create
 {
@@ -17,20 +16,17 @@ namespace KargoTakip.Application.Features.Cargo.Commands.Create
         private readonly IGenericRepository<CargoSender> _senderRepository;
         private readonly IGenericRepository<CargoReceiver> _receiverRepository;
         private readonly ILogger<CreateCargoCommandHandler> _logger;
-        private readonly TrackingNumberGenerator _trackingNumberGenerator;
 
         public CreateCargoCommandHandler(
             IGenericRepository<Domain.Entities.Cargo> cargoRepository,
             IGenericRepository<CargoSender> senderRepository,
             IGenericRepository<CargoReceiver> receiverRepository,
-            ILogger<CreateCargoCommandHandler> logger,
-            TrackingNumberGenerator trackingNumberGenerator)
+            ILogger<CreateCargoCommandHandler> logger)
         {
             _cargoRepository = cargoRepository;
             _senderRepository = senderRepository;
             _receiverRepository = receiverRepository;
             _logger = logger;
-            _trackingNumberGenerator = trackingNumberGenerator;
         }
 
         public async Task<CreateCargoCommandResponse> Handle(CreateCargoCommand request, CancellationToken cancellationToken)
@@ -44,7 +40,7 @@ namespace KargoTakip.Application.Features.Cargo.Commands.Create
                 PhoneNumber = request.SenderPhoneNumber
             };
 
-            var createdSender = await _senderRepository.AddAsync(sender);
+            var createdSender = await _senderRepository.AddAsync(sender, cancellationToken);
             if (createdSender == null)
             {
                 _logger.LogError("Gonderen bilgileri kaydedilemedi.");
@@ -62,7 +58,7 @@ namespace KargoTakip.Application.Features.Cargo.Commands.Create
                 Email = request.ReceiverEmail
             };
 
-            var createdReceiver = await _receiverRepository.AddAsync(receiver);
+            var createdReceiver = await _receiverRepository.AddAsync(receiver, cancellationToken);
             if (createdReceiver == null)
             {
                 _logger.LogError("Alici bilgileri kaydedilemedi.");
@@ -71,9 +67,9 @@ namespace KargoTakip.Application.Features.Cargo.Commands.Create
 
             _logger.LogDebug("Alici kaydedildi. Id: {ReceiverId}", createdReceiver.Id);
 
-            var trackingNumber = _trackingNumberGenerator.Generate();
+            var trackingNumber = TrackingNumberGenerator.Generate();
 
-            var existingCargo = await _cargoRepository.GetValueByExpressionAsync(c => c.TrackingNumber == trackingNumber);
+            var existingCargo = await _cargoRepository.GetValueByExpressionAsync(c => c.TrackingNumber == trackingNumber, cancellationToken);
             if (existingCargo != null)
             {
                 _logger.LogWarning("Takip numarasi cakismasi: {TrackingNumber}", trackingNumber);
@@ -88,7 +84,7 @@ namespace KargoTakip.Application.Features.Cargo.Commands.Create
                 Status = Domain.Enums.CargoStatus.Received
             };
 
-            var createdCargo = await _cargoRepository.AddAsync(cargo);
+            var createdCargo = await _cargoRepository.AddAsync(cargo, cancellationToken);
             if (createdCargo == null)
             {
                 _logger.LogError("Kargo kaydi olusturulamadi.");

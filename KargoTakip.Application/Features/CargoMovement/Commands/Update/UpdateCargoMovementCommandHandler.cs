@@ -1,8 +1,7 @@
 using KargoTakip.Application.Exceptions;
+using KargoTakip.Application.Helpers.Email;
 using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.Notification;
-using KargoTakip.Application.Messages;
-using KargoTakip.Application.Services;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using System;
@@ -18,25 +17,19 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.UpdateCargoMove
         private readonly IGenericRepository<Domain.Entities.CargoReceiver> _receiverRepository;
         private readonly IEmailQueue _emailQueue;
         private readonly ILogger<UpdateCargoMovementCommandHandler> _logger;
-        private readonly CargoStatusHelper _statusHelper;
-        private readonly EmailTemplateBuilder _emailTemplateBuilder;
 
         public UpdateCargoMovementCommandHandler(
             IGenericRepository<Domain.Entities.CargoMovement> movementRepository,
             IGenericRepository<Domain.Entities.Cargo> cargoRepository,
             IGenericRepository<Domain.Entities.CargoReceiver> receiverRepository,
             IEmailQueue emailQueue,
-            ILogger<UpdateCargoMovementCommandHandler> logger,
-            CargoStatusHelper statusHelper,
-            EmailTemplateBuilder emailTemplateBuilder)
+            ILogger<UpdateCargoMovementCommandHandler> logger)
         {
             _movementRepository = movementRepository;
             _cargoRepository = cargoRepository;
             _receiverRepository = receiverRepository;
             _emailQueue = emailQueue;
             _logger = logger;
-            _statusHelper = statusHelper;
-            _emailTemplateBuilder = emailTemplateBuilder;
         }
 
         public async Task<UpdateCargoMovementCommandResponse> Handle(UpdateCargoMovementCommand request, CancellationToken cancellationToken)
@@ -44,7 +37,7 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.UpdateCargoMove
             _logger.LogInformation("Kargo hareketi guncelleme islemi baslatildi. CargoId: {CargoId}, Yeni Durum: {NewStatus}", 
                 request.CargoId, request.NewStatus);
 
-            var cargo = await _cargoRepository.GetByIdAsync(request.CargoId);
+            var cargo = await _cargoRepository.GetByIdAsync(request.CargoId, cancellationToken);
             if (cargo == null)
             {
                 _logger.LogError("Kargo bulunamadi. CargoId: {CargoId}", request.CargoId);
@@ -68,7 +61,7 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.UpdateCargoMove
                 Description = request.Description
             };
 
-            var createdMovement = await _movementRepository.AddAsync(movement);
+            var createdMovement = await _movementRepository.AddAsync(movement, cancellationToken);
             if (createdMovement == null)
             {
                 _logger.LogError("Kargo hareketi kaydi olusturulamadi. CargoId: {CargoId}", request.CargoId);
@@ -79,9 +72,9 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.UpdateCargoMove
 
             cargo.Status = request.NewStatus;
             cargo.LastLocation = request.Location;
-            cargo.UpdatedDate = DateTime.Now;
+            cargo.UpdatedDate = DateTime.UtcNow;
 
-            var updatedCargo = await _cargoRepository.UpdateAsync(cargo);
+            var updatedCargo = await _cargoRepository.UpdateAsync(cargo, cancellationToken);
             if (updatedCargo == null)
             {
                 _logger.LogError("Kargo durumu guncellenemedi. CargoId: {CargoId}", request.CargoId);
@@ -91,7 +84,9 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.UpdateCargoMove
             _logger.LogInformation("Kargo hareketi basariyla guncellendi. CargoId: {CargoId}, Yeni Durum: {NewStatus}, Lokasyon: {Location}", 
                 request.CargoId, request.NewStatus, request.Location);
 
-            var notificationSent = await SendNotificationToReceiverAsync(cargo, request, cancellationToken);
+            var notificationSent = await CargoStatusEmailHelper.SendCargoStatusUpdateToQueueAsync(
+                _emailQueue, _receiverRepository, cargo, request.NewStatus, request.Location, request.Description,
+                _logger, cancellationToken);
 
             return new UpdateCargoMovementCommandResponse
             {
@@ -103,33 +98,6 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.UpdateCargoMove
                 Description = createdMovement.Description,
                 CreatedDate = createdMovement.CreatedDate
             };
-        }
-
-        private async Task<bool> SendNotificationToReceiverAsync(Domain.Entities.Cargo cargo, UpdateCargoMovementCommand request, CancellationToken cancellationToken)
-        {
-            var receiver = await _receiverRepository.GetValueByExpressionAsync(r => r.Id == cargo.ReceiverId);
-            if (receiver == null)
-            {
-                _logger.LogWarning("Alici bilgisi bulunamadi. ReceiverId: {ReceiverId}", cargo.ReceiverId);
-                return false;
-            }
-
-            var statusMessage = _statusHelper.GetStatusMessage(request.NewStatus);
-            var emailSubject = $"Kargo Durum Guncellemesi - {cargo.TrackingNumber}";
-            var emailBody = _emailTemplateBuilder.BuildCargoStatusUpdateEmail(
-                receiver, cargo, statusMessage, request.Location, request.Description);
-
-            await _emailQueue.PublishAsync(new SendEmailMessage
-            {
-                Email = receiver.Email,
-                Subject = emailSubject,
-                PlainBody = emailBody,
-                HtmlBody = emailBody,
-                MessageType = "KargoDurumGuncelleme"
-            }, cancellationToken);
-            _logger.LogInformation("Email kuyruga eklendi. Email: {Email}", receiver.Email);
-
-            return true;
         }
     }
 }

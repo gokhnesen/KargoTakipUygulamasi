@@ -1,7 +1,6 @@
 using FluentValidation;
 using KargoTakip.Application.Behaviors;
 using KargoTakip.Application.Interfaces.Notification;
-using KargoTakip.Application.Services;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,9 +16,6 @@ namespace KargoTakip.Application
 
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
-            services.AddScoped<CargoStatusHelper>();
-            services.AddScoped<EmailTemplateBuilder>();
-            services.AddScoped<TrackingNumberGenerator>();
             return services;
         }
     }

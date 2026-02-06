@@ -2,19 +2,19 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace KargoTakip.Application.Services
+namespace KargoTakip.Application.Helpers.Cargo
 {
-    public class TrackingNumberGenerator
+    public static class TrackingNumberGenerator
     {
         private const string Characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private const int TrackingNumberLength = 10;
 
-        public string Generate()
+        public static string Generate()
         {
             return GenerateSecureRandomString(TrackingNumberLength);
         }
 
-        private string GenerateSecureRandomString(int length)
+        private static string GenerateSecureRandomString(int length)
         {
             var result = new StringBuilder(length);
             var buffer = new byte[sizeof(uint)];

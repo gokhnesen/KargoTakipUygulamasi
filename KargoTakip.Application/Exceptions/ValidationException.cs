@@ -7,7 +7,7 @@ namespace KargoTakip.Application.Exceptions
     {
         public List<string> Errors { get; }
 
-        public ValidationException() : base("Bir veya daha fazla do?rulama hatas? olu?tu.")
+        public ValidationException() : base("Bir veya daha fazla doğrulama hatası oluştu.")
         {
             Errors = new List<string>();
         }

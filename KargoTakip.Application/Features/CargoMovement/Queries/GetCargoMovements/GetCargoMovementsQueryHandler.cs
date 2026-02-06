@@ -1,4 +1,4 @@
-﻿using KargoTakip.Application.Exceptions;
+using KargoTakip.Application.Exceptions;
 using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.CargoMovement;
 using KargoTakip.Domain.Entities;
@@ -31,14 +31,14 @@ namespace KargoTakip.Application.Features.CargoMovement.Queries.GetCargoMovement
         {
             _logger.LogInformation("Kargo hareketleri getiriliyor. CargoId: {CargoId}", request.CargoId);
 
-            var cargo = await _cargoRepository.GetValueByExpressionAsync(c => c.Id == request.CargoId && !c.IsDeleted);
+            var cargo = await _cargoRepository.GetValueByExpressionAsync(c => c.Id == request.CargoId && !c.IsDeleted, cancellationToken);
             if (cargo == null)
             {
                 _logger.LogWarning("Kargo bulunamadi. CargoId: {CargoId}", request.CargoId);
                 throw new NotFoundException("Kargo bulunamadi.");
             }
 
-            var movements = await _movementRepository.GetMovementsByCargoIdAsync(request.CargoId);
+            var movements = await _movementRepository.GetMovementsByCargoIdAsync(request.CargoId, cancellationToken);
 
             var response = new GetCargoMovementsQueryResponse
             {

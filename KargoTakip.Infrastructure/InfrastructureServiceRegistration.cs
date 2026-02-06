@@ -1,15 +1,9 @@
 using KargoTakip.Application.Interfaces;
-using KargoTakip.Application.Interfaces.Cargo;
 using KargoTakip.Application.Interfaces.Notification;
 using KargoTakip.Infrastructure.Messaging;
 using KargoTakip.Infrastructure.Services;
-using KargoTakip.Persistence.Repositories.CargoMovementRepository;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace KargoTakip.Infrastructure
 {
@@ -26,7 +20,6 @@ namespace KargoTakip.Infrastructure
             else
                 services.AddScoped<IEmailService, DummyEmailService>();
             services.AddScoped<ISmsService, DummySmsService>();
-            services.AddScoped<INotificationService, NotificationService>();
             services.AddSingleton<IEmailQueue, EmailQueueService>();
 
             return services;

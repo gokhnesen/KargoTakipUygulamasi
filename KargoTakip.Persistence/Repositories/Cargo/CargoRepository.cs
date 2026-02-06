@@ -3,8 +3,6 @@ using KargoTakip.Application.Interfaces.Cargo;
 using KargoTakip.Domain.Entities;
 using KargoTakip.Persistence.DatabaseContext;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -19,19 +17,7 @@ namespace KargoTakip.Persistence.Repositories.Cargo
             _context = context;
         }
 
-        public async Task<List<Domain.Entities.Cargo>> GetAllCargosAsync()
-        {
-            return await _context.Cargos
-                .Include(c => c.Sender)
-                .Include(c => c.Receiver)
-                .Include(c => c.Movements)
-                .Where(c => !c.IsDeleted)
-                .OrderByDescending(c => c.CreatedDate)
-                .AsNoTracking()
-                .ToListAsync();
-        }
-
-        public async Task<Domain.Entities.Cargo> GetCargoByIdWithDetailsAsync(string id)
+        public async Task<Domain.Entities.Cargo?> GetCargoByIdWithDetailsAsync(string id, CancellationToken cancellationToken = default)
         {
             var cargo = await _context.Cargos
                 .Include(c => c.Sender)
@@ -39,7 +25,7 @@ namespace KargoTakip.Persistence.Repositories.Cargo
                 .Include(c => c.Movements)
                 .Where(c => c.Id == id && !c.IsDeleted)
                 .AsNoTracking()
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (cargo?.Movements != null)
             {

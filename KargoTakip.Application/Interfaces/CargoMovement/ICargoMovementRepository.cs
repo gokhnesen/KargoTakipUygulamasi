@@ -6,7 +6,7 @@ namespace KargoTakip.Application.Interfaces.CargoMovement
 {
     public interface ICargoMovementRepository : IGenericRepository<Domain.Entities.CargoMovement>
     {
-        Task<List<Domain.Entities.CargoMovement>> GetMovementsByCargoIdAsync(string cargoId);
-        Task<Domain.Entities.CargoMovement> GetLatestMovementAsync(string cargoId);
+        Task<List<Domain.Entities.CargoMovement>> GetMovementsByCargoIdAsync(string cargoId, CancellationToken cancellationToken = default);
+        Task<Domain.Entities.CargoMovement?> GetLatestMovementAsync(string cargoId, CancellationToken cancellationToken = default);
     }
 }

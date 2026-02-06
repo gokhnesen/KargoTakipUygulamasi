@@ -1,4 +1,4 @@
-﻿using KargoTakip.Application.Features.Cargo.Commands.Create;
+using KargoTakip.Application.Features.Cargo.Commands.Create;
 using KargoTakip.Application.Features.Cargo.Queries;
 using KargoTakip.Application.Features.Cargo.Queries.GetAll;
 using KargoTakip.Application.Features.Cargo.Queries.GetById;
@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace KargoTakip.API.Controllers
 {
-    [Route("api/[controller]")]
     public class CargoController : BaseController
     {
 

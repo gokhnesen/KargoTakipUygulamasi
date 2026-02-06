@@ -1,8 +1,7 @@
-﻿using KargoTakip.Application.Exceptions;
+using KargoTakip.Application.Exceptions;
+using KargoTakip.Application.Helpers.Cargo;
 using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.CargoMovement;
-using KargoTakip.Application.Services;
-using KargoTakip.Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using System.Linq;
@@ -18,22 +17,19 @@ namespace KargoTakip.Application.Features.CargoMovement.Queries.TrackCargo
         private readonly IGenericRepository<Domain.Entities.CargoSender> _senderRepository;
         private readonly IGenericRepository<Domain.Entities.CargoReceiver> _receiverRepository;
         private readonly ILogger<TrackCargoQueryHandler> _logger;
-        private readonly CargoStatusHelper _statusHelper;
 
         public TrackCargoQueryHandler(
             ICargoMovementRepository movementRepository,
             IGenericRepository<Domain.Entities.Cargo> cargoRepository,
             IGenericRepository<Domain.Entities.CargoSender> senderRepository,
             IGenericRepository<Domain.Entities.CargoReceiver> receiverRepository,
-            ILogger<TrackCargoQueryHandler> logger,
-            CargoStatusHelper statusHelper)
+            ILogger<TrackCargoQueryHandler> logger)
         {
             _movementRepository = movementRepository;
             _cargoRepository = cargoRepository;
             _senderRepository = senderRepository;
             _receiverRepository = receiverRepository;
             _logger = logger;
-            _statusHelper = statusHelper;
         }
 
         public async Task<TrackCargoQueryResponse> Handle(TrackCargoQuery request, CancellationToken cancellationToken)
@@ -41,7 +37,7 @@ namespace KargoTakip.Application.Features.CargoMovement.Queries.TrackCargo
             _logger.LogInformation("Kargo takip sorgusu baslatildi. TrackingNumber: {TrackingNumber}", request.TrackingNumber);
 
             var cargo = await _cargoRepository.GetValueByExpressionAsync(
-                c => c.TrackingNumber == request.TrackingNumber && !c.IsDeleted);
+                c => c.TrackingNumber == request.TrackingNumber && !c.IsDeleted, cancellationToken);
 
             if (cargo == null)
             {
@@ -49,9 +45,9 @@ namespace KargoTakip.Application.Features.CargoMovement.Queries.TrackCargo
                 throw new NotFoundException("Takip numarasi ile eslesen kargo bulunamadi.");
             }
 
-            var sender = await _senderRepository.GetValueByExpressionAsync(s => s.Id == cargo.SenderId);
-            var receiver = await _receiverRepository.GetValueByExpressionAsync(r => r.Id == cargo.ReceiverId);
-            var movements = await _movementRepository.GetMovementsByCargoIdAsync(cargo.Id);
+            var sender = await _senderRepository.GetValueByExpressionAsync(s => s.Id == cargo.SenderId, cancellationToken);
+            var receiver = await _receiverRepository.GetValueByExpressionAsync(r => r.Id == cargo.ReceiverId, cancellationToken);
+            var movements = await _movementRepository.GetMovementsByCargoIdAsync(cargo.Id, cancellationToken);
 
             var latestMovement = movements.FirstOrDefault();
 
@@ -59,7 +55,7 @@ namespace KargoTakip.Application.Features.CargoMovement.Queries.TrackCargo
             {
                 TrackingNumber = cargo.TrackingNumber,
                 CurrentStatus = cargo.Status,
-                CurrentStatusText = _statusHelper.GetStatusMessage(cargo.Status),
+                CurrentStatusText = CargoStatusHelper.GetStatusMessage(cargo.Status),
                 CurrentLocation = latestMovement?.Location ?? "Bilgi yok",
                 Sender = sender != null ? new SenderInfo
                 {
@@ -77,7 +73,7 @@ namespace KargoTakip.Application.Features.CargoMovement.Queries.TrackCargo
                 Movements = movements.Select(m => new MovementInfo
                 {
                     Status = m.NewStatus,
-                    StatusText = _statusHelper.GetStatusMessage(m.NewStatus),
+                    StatusText = CargoStatusHelper.GetStatusMessage(m.NewStatus),
                     Location = m.Location,
                     Description = m.Description,
                     Date = m.CreatedDate

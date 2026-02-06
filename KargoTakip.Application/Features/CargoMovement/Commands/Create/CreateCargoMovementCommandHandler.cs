@@ -1,11 +1,9 @@
 using KargoTakip.Application.Exceptions;
+using KargoTakip.Application.Helpers.Email;
 using KargoTakip.Application.Interfaces;
-using KargoTakip.Application.Interfaces.Cargo;
 using KargoTakip.Application.Interfaces.Notification;
-using KargoTakip.Application.Services;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,34 +14,28 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.Create
         private readonly IGenericRepository<Domain.Entities.CargoMovement> _movementRepository;
         private readonly IGenericRepository<Domain.Entities.Cargo> _cargoRepository;
         private readonly IGenericRepository<Domain.Entities.CargoReceiver> _receiverRepository;
-        private readonly INotificationService _notificationService;
+        private readonly IEmailQueue _emailQueue;
         private readonly ILogger<CreateCargoMovementCommandHandler> _logger;
-        private readonly CargoStatusHelper _statusHelper;
-        private readonly EmailTemplateBuilder _emailTemplateBuilder;
 
         public CreateCargoMovementCommandHandler(
             IGenericRepository<Domain.Entities.CargoMovement> movementRepository,
             IGenericRepository<Domain.Entities.Cargo> cargoRepository,
             IGenericRepository<Domain.Entities.CargoReceiver> receiverRepository,
-            INotificationService notificationService,
-            ILogger<CreateCargoMovementCommandHandler> logger,
-            CargoStatusHelper statusHelper,
-            EmailTemplateBuilder emailTemplateBuilder)
+            IEmailQueue emailQueue,
+            ILogger<CreateCargoMovementCommandHandler> logger)
         {
             _movementRepository = movementRepository;
             _cargoRepository = cargoRepository;
             _receiverRepository = receiverRepository;
-            _notificationService = notificationService;
+            _emailQueue = emailQueue;
             _logger = logger;
-            _statusHelper = statusHelper;
-            _emailTemplateBuilder = emailTemplateBuilder;
         }
 
         public async Task<CreateCargoMovementCommandResponse> Handle(CreateCargoMovementCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Yeni kargo hareketi olusturuluyor. CargoId: {CargoId}", request.CargoId);
 
-            var cargo = await _cargoRepository.GetValueByExpressionAsync(c => c.Id == request.CargoId);
+            var cargo = await _cargoRepository.GetValueByExpressionAsync(c => c.Id == request.CargoId, cancellationToken);
             if (cargo == null)
             {
                 _logger.LogError("Kargo bulunamadi. CargoId: {CargoId}", request.CargoId);
@@ -58,7 +50,7 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.Create
                 Description = request.Description
             };
 
-            var createdMovement = await _movementRepository.AddAsync(movement);
+            var createdMovement = await _movementRepository.AddAsync(movement, cancellationToken);
             if (createdMovement == null)
             {
                 _logger.LogError("Kargo hareketi kaydedilemedi.");
@@ -67,14 +59,16 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.Create
 
             cargo.Status = request.NewStatus;
             cargo.LastLocation = request.Location;
-            await _cargoRepository.UpdateAsync(cargo);
+            await _cargoRepository.UpdateAsync(cargo, cancellationToken);
 
             _logger.LogInformation("Kargo hareketi kaydedildi. MovementId: {MovementId}", createdMovement.Id);
 
             var notificationSent = false;
             if (request.SendNotification)
             {
-                notificationSent = await SendNotificationToReceiverAsync(cargo, request);
+                notificationSent = await CargoStatusEmailHelper.SendCargoStatusUpdateToQueueAsync(
+                    _emailQueue, _receiverRepository, cargo, request.NewStatus, request.Location, request.Description,
+                    _logger, cancellationToken);
             }
 
             return new CreateCargoMovementCommandResponse
@@ -87,26 +81,6 @@ namespace KargoTakip.Application.Features.CargoMovement.Commands.Create
                 MovementDate = createdMovement.CreatedDate,
                 NotificationSent = notificationSent
             };
-        }
-
-        private async Task<bool> SendNotificationToReceiverAsync(Domain.Entities.Cargo cargo, CreateCargoMovementCommand request)
-        {
-            var receiver = await _receiverRepository.GetValueByExpressionAsync(r => r.Id == cargo.ReceiverId);
-            if (receiver == null)
-            {
-                _logger.LogWarning("Alici bilgisi bulunamadi. ReceiverId: {ReceiverId}", cargo.ReceiverId);
-                return false;
-            }
-
-            var statusMessage = _statusHelper.GetStatusMessage(request.NewStatus);
-            var emailSubject = $"Kargo Durum Guncellemesi - {cargo.TrackingNumber}";
-            var emailBody = _emailTemplateBuilder.BuildCargoStatusUpdateEmail(
-                receiver, cargo, statusMessage, request.Location, request.Description);
-
-            await _notificationService.SendEmailAsync(receiver.Email, emailSubject, emailBody);
-            _logger.LogInformation("Email gonderildi. Email: {Email}", receiver.Email);
-
-            return true;
         }
     }
 }

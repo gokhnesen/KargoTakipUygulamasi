@@ -1,23 +1,19 @@
 using KargoTakip.Application.Specifications;
 using KargoTakip.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Linq.Expressions;
 
 namespace KargoTakip.Application.Interfaces
 {
     public interface IGenericRepository<T> where T : BaseEntity
     {
-        Task<List<T>> GetAllAsync();
-        Task<T> GetByIdAsync(string id);
-        Task<T> AddAsync(T entity);
-        Task<T> UpdateAsync(T entity);
-        Task<bool> DeleteAsync(string id);
-
-        Task<T> GetValueByExpressionAsync(System.Linq.Expressions.Expression<Func<T, bool>> expression);
-
-        Task<List<T>> GetAllWithSpecAsync(ISpecification<T> spec);
-        Task<List<string>> GetIdsWithSpecAsync(ISpecification<T> spec);
-        Task<int> CountAsync(ISpecification<T> spec);
+        Task<List<T>> GetAllAsync(CancellationToken cancellationToken = default);
+        Task<T?> GetByIdAsync(string id, CancellationToken cancellationToken = default);
+        Task<T> AddAsync(T entity, CancellationToken cancellationToken = default);
+        Task<T> UpdateAsync(T entity, CancellationToken cancellationToken = default);
+        Task<bool> DeleteAsync(string id, CancellationToken cancellationToken = default);
+        Task<T?> GetValueByExpressionAsync(Expression<Func<T, bool>> expression, CancellationToken cancellationToken = default);
+        Task<List<T>> GetAllWithSpecAsync(ISpecification<T> spec, CancellationToken cancellationToken = default);
+        Task<List<string>> GetIdsWithSpecAsync(ISpecification<T> spec, CancellationToken cancellationToken = default);
+        Task<int> CountAsync(ISpecification<T> spec, CancellationToken cancellationToken = default);
     }
 }

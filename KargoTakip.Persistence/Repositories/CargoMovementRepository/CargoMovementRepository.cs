@@ -17,20 +17,20 @@ namespace KargoTakip.Persistence.Repositories.CargoMovementRepository
             _context = context;
         }
 
-        public async Task<List<CargoMovement>> GetMovementsByCargoIdAsync(string cargoId)
+        public async Task<List<CargoMovement>> GetMovementsByCargoIdAsync(string cargoId, CancellationToken cancellationToken = default)
         {
             return await _context.Set<CargoMovement>()
                 .Where(m => m.CargoId == cargoId && !m.IsDeleted)
                 .OrderByDescending(m => m.CreatedDate)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<CargoMovement> GetLatestMovementAsync(string cargoId)
+        public async Task<CargoMovement?> GetLatestMovementAsync(string cargoId, CancellationToken cancellationToken = default)
         {
             return await _context.Set<CargoMovement>()
                 .Where(m => m.CargoId == cargoId && !m.IsDeleted)
                 .OrderByDescending(m => m.CreatedDate)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
         }
     }
 }

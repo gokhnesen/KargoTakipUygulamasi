@@ -37,10 +37,10 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
             if (runCountQuery)
             {
                 var countSpec = new CargoFilterSpecification(filterParams.ToCountParams());
-                totalCount = await _cargoRepository.CountAsync(countSpec);
+                totalCount = await _cargoRepository.CountAsync(countSpec, cancellationToken);
             }
 
-            var cargos = await _cargoRepository.GetAllWithSpecAsync(spec);
+            var cargos = await _cargoRepository.GetAllWithSpecAsync(spec, cancellationToken);
 
             if (cargos == null || !cargos.Any())
             {

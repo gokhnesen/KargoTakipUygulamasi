@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace KargoTakip.API.Controllers
 {
-    [Route("api/[controller]")]
     public class AuthController : BaseController
     {
         [HttpPost("register")]

@@ -28,7 +28,7 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetById
         {
             _logger.LogInformation("Kargo getiriliyor. Id: {CargoId}", request.Id);
 
-            var cargo = await _cargoRepository.GetCargoByIdWithDetailsAsync(request.Id);
+            var cargo = await _cargoRepository.GetCargoByIdWithDetailsAsync(request.Id, cancellationToken);
 
             if (cargo == null)
             {

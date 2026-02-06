@@ -1,10 +1,10 @@
 using KargoTakip.Domain.Enums;
 
-namespace KargoTakip.Application.Services
+namespace KargoTakip.Application.Helpers.Cargo
 {
-    public class CargoStatusHelper
+    public static class CargoStatusHelper
     {
-        public string GetStatusMessage(CargoStatus status)
+        public static string GetStatusMessage(CargoStatus status)
         {
             return status switch
             {

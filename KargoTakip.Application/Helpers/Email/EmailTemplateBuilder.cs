@@ -1,14 +1,14 @@
-using KargoTakip.Domain.Entities;
 using System;
 using System.Text;
+using CargoReceiver = KargoTakip.Domain.Entities.CargoReceiver;
 
-namespace KargoTakip.Application.Services
+namespace KargoTakip.Application.Helpers.Email
 {
-    public class EmailTemplateBuilder
+    public static class EmailTemplateBuilder
     {
-        public string BuildCargoStatusUpdateEmail(
+        public static string BuildCargoStatusUpdateEmail(
             CargoReceiver receiver,
-            Cargo cargo,
+            KargoTakip.Domain.Entities.Cargo cargo,
             string statusMessage,
             string location,
             string description)
@@ -21,7 +21,7 @@ namespace KargoTakip.Application.Services
             sb.AppendLine($"<p><strong>Yeni Durum:</strong> {statusMessage}</p>");
             sb.AppendLine($"<p><strong>Konum:</strong> {location}</p>");
             sb.AppendLine($"<p><strong>Aciklama:</strong> {description}</p>");
-            sb.AppendLine($"<p><strong>Guncelleme Tarihi:</strong> {DateTime.Now:dd.MM.yyyy HH:mm}</p>");
+            sb.AppendLine($"<p><strong>Guncelleme Tarihi:</strong> {DateTime.UtcNow:dd.MM.yyyy HH:mm}</p>");
             sb.AppendLine($"<hr/>");
             sb.AppendLine($"<p>Kargonuzu takip etmek icin takip numaranizi kullanabilirsiniz.</p>");
             sb.AppendLine($"<p>Iyi gunler dileriz.</p>");
