@@ -1,6 +1,5 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-// RabbitMQ'yu Docker container olarak ayağa kaldır; Aspire dashboard'da görünür ve yönetim eklentisi ile erişilebilir
 var rabbitmqUsername = builder.AddParameter("rabbitmq-username", "guest");
 var rabbitmqPassword = builder.AddParameter("rabbitmq-password", secret: true);
 

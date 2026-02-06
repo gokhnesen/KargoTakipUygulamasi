@@ -17,7 +17,6 @@ namespace KargoTakip.Persistence.Migrations
                 maxLength: 256,
                 nullable: true);
 
-            // Mevcut kargolarin son konumunu son hareketten doldur
             migrationBuilder.Sql(@"
                 UPDATE c SET c.LastLocation = m.Location
                 FROM Cargos c

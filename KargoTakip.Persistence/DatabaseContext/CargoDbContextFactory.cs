@@ -4,9 +4,6 @@ using Microsoft.Extensions.Configuration;
 
 namespace KargoTakip.Persistence.DatabaseContext
 {
-    /// <summary>
-    /// EF Core tasarim zamani (migrations, database update) icin DbContext olusturur.
-    /// </summary>
     public class CargoDbContextFactory : IDesignTimeDbContextFactory<CargoDbContext>
     {
         public CargoDbContext CreateDbContext(string[] args)

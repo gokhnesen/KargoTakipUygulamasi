@@ -4,9 +4,6 @@ using System.Threading.Tasks;
 
 namespace KargoTakip.Infrastructure.Services
 {
-    /// <summary>
-    /// Brevo kapalıyken kullanılır; e-posta göndermez, sadece loglar.
-    /// </summary>
     public class DummyEmailService : IEmailService
     {
         private readonly ILogger<DummyEmailService> _logger;

@@ -14,7 +14,6 @@ export interface CargoFilterParams {
     isDescending?: boolean;
     pageIndex?: number;
     pageSize?: number;
-    includeMovements?: boolean;
     includeTotalCount?: boolean;
 }
 

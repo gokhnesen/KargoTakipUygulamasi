@@ -56,7 +56,6 @@ export class CargoServices {
     if (filter.pageSize !== undefined) params['pageSize'] = filter.pageSize;
     if (filter.orderBy) params['orderBy'] = filter.orderBy;
     if (filter.isDescending !== undefined) params['isDescending'] = filter.isDescending;
-    if (filter.includeMovements) params['includeMovements'] = filter.includeMovements;
     if (filter.includeTotalCount !== undefined) params['includeTotalCount'] = filter.includeTotalCount;
 
     return this.http.get<CargoListResponse>(`${this.baseUrl}`, { params }).pipe(

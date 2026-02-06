@@ -15,7 +15,6 @@ namespace KargoTakip.Domain.Entities
         public ICollection<CargoMovement> Movements { get; set; }
 
         public CargoStatus Status { get; set; }
-        /// <summary>Son hareketin konumu; liste ekraninda Movements yuklenmeden gosterilir.</summary>
         public string? LastLocation { get; set; }
     }
 }

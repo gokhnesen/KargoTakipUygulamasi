@@ -15,7 +15,6 @@ export interface Cargo {
   status: CargoStatus;
   createdDate: Date;
   updatedDate?: Date;
-  /** API liste cevabinda doner (movements yerine). */
   lastLocation?: string;
   currentLocation?: string;
   movements?: CargoMovement[];

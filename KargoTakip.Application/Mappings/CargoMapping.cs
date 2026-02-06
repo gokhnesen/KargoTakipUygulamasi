@@ -6,14 +6,10 @@ using System.Linq;
 
 namespace KargoTakip.Application.Mappings
 {
-    /// <summary>
-    /// Cargo entity -> DTO mapping; "Bilinmiyor" gibi display mantığı burada tutulur, handler'da değil.
-    /// </summary>
     public static class CargoMapping
     {
         private const string UnknownDisplay = "Bilinmiyor";
 
-        /// <summary>Liste cevabi: sadece LastLocation doner, Movements donmez.</summary>
         public static GetAllCargosQueryResponse ToGetAllCargosQueryResponse(this Cargo c)
         {
             return new GetAllCargosQueryResponse

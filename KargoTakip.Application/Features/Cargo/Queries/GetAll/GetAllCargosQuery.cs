@@ -20,12 +20,10 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
         public string? OrderBy { get; set; } = "date";
         public bool IsDescending { get; set; } = true;
 
-        /// <summary>Varsayilan true: offset yerine cursor ile sayfalama, buyuk sayfa numaralarinda daha hizli.</summary>
         public bool UseKeysetPagination { get; set; } = true;
         public DateTime? CursorCreatedDate { get; set; }
         public string? CursorId { get; set; }
 
-        /// <summary>Varsayilan true: toplam kargo sayisi ve filtre sonucu sayisi doner; performans icin false gonderilebilir.</summary>
         public bool IncludeTotalCount { get; set; } = true;
 
         public CargoStatus? GetCargoStatus()

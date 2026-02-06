@@ -5,15 +5,10 @@ using System;
 
 namespace KargoTakip.Infrastructure.Messaging
 {
-    /// <summary>
-    /// Creates RabbitMQ connections from configuration.
-    /// Supports Aspire WithReference (ConnectionStrings:messaging URI) or RabbitMQ section (HostName, Port, etc.).
-    /// </summary>
     public static class RabbitMQConnectionFactory
     {
         public static ConnectionFactory CreateFromConfiguration(IConfiguration configuration)
         {
-            // Aspire WithReference(rabbitmq) ConnectionStrings:messaging enjekte eder; bazen ConnectionStrings__messaging (env) olur
             var uri = configuration["ConnectionStrings:messaging"]
                 ?? configuration["ConnectionStrings__messaging"];
             if (!string.IsNullOrWhiteSpace(uri))

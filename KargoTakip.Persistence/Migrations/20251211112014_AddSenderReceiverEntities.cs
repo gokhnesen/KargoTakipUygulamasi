@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,7 +11,6 @@ namespace KargoTakip.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Önce mevcut Cargos verilerini sil (geliştirme ortamı için)
             migrationBuilder.Sql("DELETE FROM CargoMovements");
             migrationBuilder.Sql("DELETE FROM Cargos");
 

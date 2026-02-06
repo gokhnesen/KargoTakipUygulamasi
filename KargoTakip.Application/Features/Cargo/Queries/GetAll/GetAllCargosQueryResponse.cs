@@ -18,7 +18,6 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
         public CargoStatus Status { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
-        /// <summary>Son hareketin konumu (en guncel lokasyon). Liste cevabinda movements yerine sadece bu alan doner.</summary>
         public string? LastLocation { get; set; }
     }
 }
