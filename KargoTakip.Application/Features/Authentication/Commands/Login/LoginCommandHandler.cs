@@ -1,4 +1,5 @@
 using KargoTakip.Application.Exceptions;
+using KargoTakip.Application.Helpers.Email;
 using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.Notification;
 using KargoTakip.Application.Messages;
@@ -105,13 +106,14 @@ namespace KargoTakip.Application.Features.Authentication.Commands.Login
             var loginToken = Guid.NewGuid().ToString("N");
             await _loginOtpStore.SetAsync(loginToken, user.Id.ToString(), user.Email ?? request.Email, otp, TimeSpan.FromMinutes(OtpExpiryMinutes), cancellationToken);
 
-            var subject = "Giris dogrulama kodu - KargoTakip";
-            var body = $"Giris dogrulama kodunuz: {otp}. Bu kod {OtpExpiryMinutes} dakika gecerlidir. Bu islemi siz yapmadiysaniz dikkate almayin.";
-            var htmlBody = $@"
-                <h2>Giris dogrulama kodu</h2>
-                <p>Giris dogrulama kodunuz: <strong>{otp}</strong></p>
-                <p>Bu kod <strong>{OtpExpiryMinutes} dakika</strong> gecerlidir.</p>
-                <p>Bu islemi siz yapmadiysaniz lutfen dikkate almayin.</p>";
+            var subject = $"Giriş doğrulama kodu - {EmailTemplateBuilder.CompanyName}";
+            var body = $"Giriş doğrulama kodunuz: {otp}. Bu kod {OtpExpiryMinutes} dakika geçerlidir. Bu işlemi siz yapmadıysanız dikkate almayın.";
+            var innerHtml = $@"
+                <h2 style=""margin:0 0 16px; font-size:18px; color:#111827;"">Giriş doğrulama kodu</h2>
+                <p style=""margin:0 0 12px;"">Giriş doğrulama kodunuz: <strong>{otp}</strong></p>
+                <p style=""margin:0 0 12px;"">Bu kod <strong>{OtpExpiryMinutes} dakika</strong> geçerlidir.</p>
+                <p style=""margin:0;"">Bu işlemi siz yapmadıysanız lütfen dikkate almayın.</p>";
+            var htmlBody = EmailTemplateBuilder.WrapWithBranding(innerHtml);
             await _emailQueue.PublishAsync(new SendEmailMessage
             {
                 Email = user.Email ?? request.Email,

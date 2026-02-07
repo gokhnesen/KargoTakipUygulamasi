@@ -11,7 +11,7 @@ var api = builder.AddProject<Projects.KargoTakip_API>("kargotakip-api")
     .WithHttpsEndpoint(port: 7055, name: "https-7055")
     .WithReference(rabbitmq);
 
-_ = builder.AddNpmApp("frontend", "../KargoTakip.Client/KargoTakipClient", "start:aspire")
+_ = builder.AddNpmApp("kargonuzu-gezdiriyoruz", "../KargoTakip.Client/KargoTakipClient", "start:aspire")
     .WithHttpsEndpoint(port: 4200, targetPort: 4200, isProxied: false);
 
 builder.Build().Run();

@@ -9,10 +9,14 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
 {
     public class CargoFilterSpecification : BaseSpecification<Cargo>
     {
+        private const string OrderByDate = "date";
+        private const string OrderByTrackingNumber = "trackingnumber";
+        private const string OrderByStatus = "status";
+
         public CargoFilterSpecification(CargoFilterParams filterParams)
             : base(BuildCriteria(filterParams))
         {
-            if (!filterParams.IsCount && !filterParams.SkipIncludes)
+            if (!filterParams.IsCount)
             {
                 AddInclude(c => c.Sender);
                 AddInclude(c => c.Receiver);
@@ -23,68 +27,28 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
                 }
             }
 
-            if (!string.IsNullOrEmpty(filterParams.OrderBy))
+            var orderBy = string.IsNullOrEmpty(filterParams.OrderBy) ? OrderByDate : filterParams.OrderBy.Trim();
+            var isDesc = filterParams.IsDescending;
+
+            if (string.Equals(orderBy, OrderByTrackingNumber, StringComparison.OrdinalIgnoreCase))
             {
-                switch (filterParams.OrderBy.ToLower())
-                {
-                    case "date":
-                        if (filterParams.IsDescending)
-                        {
-                            ApplyOrderByDescending(c => c.CreatedDate);
-                            ApplyThenByDescending(c => c.Id);
-                        }
-                        else
-                        {
-                            ApplyOrderBy(c => c.CreatedDate);
-                            ApplyThenBy(c => c.Id);
-                        }
-                        break;
-                    case "trackingnumber":
-                        if (filterParams.IsDescending)
-                        {
-                            ApplyOrderByDescending(c => c.TrackingNumber);
-                            ApplyThenByDescending(c => c.Id);
-                        }
-                        else
-                        {
-                            ApplyOrderBy(c => c.TrackingNumber);
-                            ApplyThenBy(c => c.Id);
-                        }
-                        break;
-                    case "status":
-                        if (filterParams.IsDescending)
-                        {
-                            ApplyOrderByDescending(c => c.Status);
-                            ApplyThenByDescending(c => c.CreatedDate);
-                        }
-                        else
-                        {
-                            ApplyOrderBy(c => c.Status);
-                            ApplyThenBy(c => c.CreatedDate);
-                        }
-                        break;
-                    default:
-                        ApplyOrderByDescending(c => c.CreatedDate);
-                        ApplyThenByDescending(c => c.Id);
-                        break;
-                }
+                if (isDesc) { ApplyOrderByDescending(c => c.TrackingNumber); ApplyThenByDescending(c => c.Id); }
+                else { ApplyOrderBy(c => c.TrackingNumber); ApplyThenBy(c => c.Id); }
+            }
+            else if (string.Equals(orderBy, OrderByStatus, StringComparison.OrdinalIgnoreCase))
+            {
+                if (isDesc) { ApplyOrderByDescending(c => c.Status); ApplyThenByDescending(c => c.CreatedDate); }
+                else { ApplyOrderBy(c => c.Status); ApplyThenBy(c => c.CreatedDate); }
             }
             else
             {
-                ApplyOrderByDescending(c => c.CreatedDate);
-                ApplyThenByDescending(c => c.Id);
+                if (isDesc) { ApplyOrderByDescending(c => c.CreatedDate); ApplyThenByDescending(c => c.Id); }
+                else { ApplyOrderBy(c => c.CreatedDate); ApplyThenBy(c => c.Id); }
             }
 
             if (filterParams.PageSize > 0)
             {
-                if (filterParams.UseKeysetPagination)
-                {
-                    ApplyPaging(0, filterParams.PageSize);
-                }
-                else
-                {
-                    ApplyPaging(filterParams.PageSize * (filterParams.PageIndex - 1), filterParams.PageSize);
-                }
+                ApplyPaging(filterParams.PageSize * (filterParams.PageIndex - 1), filterParams.PageSize);
             }
         }
 
@@ -158,55 +122,28 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
                 criteria = CombineExpressions(criteria, c => c.CreatedDate <= endDate);
             }
 
-            if (filterParams.UseKeysetPagination
-                && filterParams.CursorCreatedDate.HasValue
-                && !string.IsNullOrEmpty(filterParams.CursorId)
-                && string.Equals(filterParams.OrderBy, "date", StringComparison.OrdinalIgnoreCase))
-            {
-                var cursorDate = filterParams.CursorCreatedDate.Value;
-                var cursorId = filterParams.CursorId;
-
-                if (filterParams.IsDescending)
-                {
-                    criteria = CombineExpressions(criteria, c =>
-                        c.CreatedDate < cursorDate ||
-                        (c.CreatedDate == cursorDate && string.Compare(c.Id, cursorId) < 0));
-                }
-                else
-                {
-                    criteria = CombineExpressions(criteria, c =>
-                        c.CreatedDate > cursorDate ||
-                        (c.CreatedDate == cursorDate && string.Compare(c.Id, cursorId) > 0));
-                }
-            }
-
             return criteria;
         }
 
-        public static (CargoFilterParams FilterParams, bool UseKeyset, int PageIndex, int PageSize, bool RunCountQuery, bool FetchOneMore) FromGetAllCargosQuery(GetAllCargosQuery request)
+        public static (CargoFilterParams FilterParams, int PageIndex, int PageSize, bool RunCountQuery, bool FetchOneMore) FromGetAllCargosQuery(GetAllCargosQuery request)
         {
             var pageIndex = request.EffectivePageIndex;
             var pageSize = request.EffectivePageSize;
-            var normalizedOrderBy = string.IsNullOrWhiteSpace(request.OrderBy) ? "date" : request.OrderBy.Trim();
-            var useKeyset = request.UseKeysetPagination &&
-                            string.Equals(normalizedOrderBy, "date", StringComparison.OrdinalIgnoreCase);
+            var normalizedOrderBy = string.IsNullOrWhiteSpace(request.OrderBy) ? OrderByDate : request.OrderBy.Trim();
             var hasSearchTerm = !string.IsNullOrWhiteSpace(request.SearchTerm);
-            var fetchOneMore = !useKeyset && (!request.IncludeTotalCount || hasSearchTerm);
-            var requestedPageSize = (useKeyset || fetchOneMore) ? (pageSize + 1) : pageSize;
-            var searchTermTrimmed = request.SearchTerm?.Trim() ?? string.Empty;
-            var searchTermLooksLikeTracking = hasSearchTerm && searchTermTrimmed.Length <= 40 && searchTermTrimmed.Any(char.IsDigit)
-                && searchTermTrimmed.All(ch => char.IsLetterOrDigit(ch) || ch == '-' || ch == '.' || ch == ' ');
-            var trackingNumberFromRequest = !string.IsNullOrWhiteSpace(request.TrackingNumber) ? request.TrackingNumber!.Trim() : null;
-            var useSearchTermAsTracking = searchTermLooksLikeTracking && trackingNumberFromRequest == null;
-            var effectiveTrackingNumber = trackingNumberFromRequest ?? (useSearchTermAsTracking ? searchTermTrimmed : null);
-            var effectiveSearchTerm = (useSearchTermAsTracking || (effectiveTrackingNumber != null && hasSearchTerm && searchTermLooksLikeTracking)) ? null : request.SearchTerm;
+            var fetchOneMore = !request.IncludeTotalCount || hasSearchTerm;
+            var requestedPageSize = fetchOneMore ? (pageSize + 1) : pageSize;
+
+            var (effectiveTrackingNumber, effectiveSearchTerm, searchTermTrackingOnly) = ResolveSearchAndTracking(
+                request.SearchTerm,
+                request.TrackingNumber);
 
             var filterParams = new CargoFilterParams
             {
                 Status = request.GetCargoStatus(),
                 TrackingNumber = effectiveTrackingNumber,
                 SearchTerm = effectiveSearchTerm,
-                SearchTermTrackingOnly = !useSearchTermAsTracking && searchTermLooksLikeTracking,
+                SearchTermTrackingOnly = searchTermTrackingOnly,
                 SenderName = request.SenderName,
                 ReceiverName = request.ReceiverName,
                 ReceiverEmail = request.ReceiverEmail,
@@ -214,15 +151,26 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
                 EndDate = request.EndDate,
                 OrderBy = normalizedOrderBy,
                 IsDescending = request.IsDescending,
-                PageIndex = useKeyset ? PaginationHelper.DefaultPageIndex : pageIndex,
+                PageIndex = pageIndex,
                 PageSize = requestedPageSize,
-                IncludeMovements = false,
-                UseKeysetPagination = useKeyset,
-                CursorCreatedDate = request.CursorCreatedDate,
-                CursorId = request.CursorId
+                IncludeMovements = false
             };
 
-            return (filterParams, useKeyset, pageIndex, pageSize, request.IncludeTotalCount, fetchOneMore);
+            return (filterParams, pageIndex, pageSize, request.IncludeTotalCount, fetchOneMore);
+        }
+
+        private static (string? EffectiveTrackingNumber, string? EffectiveSearchTerm, bool SearchTermTrackingOnly) ResolveSearchAndTracking(string? searchTerm, string? trackingNumber)
+        {
+            var searchTermTrimmed = searchTerm?.Trim() ?? string.Empty;
+            var hasSearchTerm = !string.IsNullOrWhiteSpace(searchTerm);
+            var searchTermLooksLikeTracking = hasSearchTerm && searchTermTrimmed.Length <= 40 && searchTermTrimmed.Any(char.IsDigit)
+                && searchTermTrimmed.All(ch => char.IsLetterOrDigit(ch) || ch == '-' || ch == '.' || ch == ' ');
+            var trackingNumberFromRequest = !string.IsNullOrWhiteSpace(trackingNumber) ? trackingNumber!.Trim() : null;
+            var useSearchTermAsTracking = searchTermLooksLikeTracking && trackingNumberFromRequest == null;
+            var effectiveTrackingNumber = trackingNumberFromRequest ?? (useSearchTermAsTracking ? searchTermTrimmed : null);
+            var effectiveSearchTerm = (useSearchTermAsTracking || (effectiveTrackingNumber != null && hasSearchTerm && searchTermLooksLikeTracking)) ? null : searchTerm;
+            var searchTermTrackingOnly = !useSearchTermAsTracking && searchTermLooksLikeTracking;
+            return (effectiveTrackingNumber, effectiveSearchTerm, searchTermTrackingOnly);
         }
 
         private static Expression<Func<T, bool>> CombineExpressions<T>(
@@ -237,11 +185,14 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
             var rightVisitor = new ReplaceExpressionVisitor(second.Parameters[0], parameter);
             var right = rightVisitor.Visit(second.Body);
 
-            return Expression.Lambda<Func<T, bool>>(Expression.AndAlso(left!, right!), parameter);
+            if (left == null || right == null)
+                throw new InvalidOperationException("Expression visit produced null body.");
+
+            return Expression.Lambda<Func<T, bool>>(Expression.AndAlso(left, right), parameter);
         }
     }
 
-    public class ReplaceExpressionVisitor : ExpressionVisitor
+    file class ReplaceExpressionVisitor : ExpressionVisitor
     {
         private readonly Expression _oldValue;
         private readonly Expression _newValue;
@@ -273,13 +224,10 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
         public int PageIndex { get; set; } = 1;
         public int PageSize { get; set; } = 50;
         public bool IncludeMovements { get; set; } = false;
-        public bool UseKeysetPagination { get; set; } = false;
-        public DateTime? CursorCreatedDate { get; set; }
-        public string? CursorId { get; set; }
         public bool IsCount { get; set; } = false;
-        public bool SkipIncludes { get; set; } = false;
         public bool SearchTermTrackingOnly { get; set; } = false;
 
+        /// <summary>Count için sadece filtre alanları kopyalanır; sıralama ve sayfalama bilgisi gerekmez.</summary>
         public CargoFilterParams ToCountParams()
         {
             return new CargoFilterParams
@@ -295,7 +243,6 @@ namespace KargoTakip.Application.Specifications.CargoSpecifications
                 EndDate = EndDate,
                 PageSize = 0,
                 IncludeMovements = false,
-                UseKeysetPagination = false,
                 IsCount = true
             };
         }

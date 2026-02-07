@@ -124,6 +124,10 @@ export class CargoManagementComponent implements OnInit {
   }
 
   filterByStatus(status: CargoStatus): void {
+    if (this.selectedStatusFilter === status) {
+      this.clearStatusFilter();
+      return;
+    }
     this.selectedStatusFilter = status;
     this.filterParams.status = status;
     this.filterParams.pageIndex = 1;

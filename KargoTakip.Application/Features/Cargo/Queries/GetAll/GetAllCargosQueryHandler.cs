@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
 {
-    public class GetAllCargosQueryHandler : IRequestHandler<GetAllCargosQuery, GetAllCargosQueryResult>
+    public class GetAllCargosQueryHandler : IRequestHandler<GetAllCargosQuery, GetAllCargosQueryResponse>
     {
         private readonly IGenericRepository<Domain.Entities.Cargo> _cargoRepository;
         private readonly ILogger<GetAllCargosQueryHandler> _logger;
@@ -25,12 +25,12 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
             _logger = logger;
         }
 
-        public async Task<GetAllCargosQueryResult> Handle(GetAllCargosQuery request, CancellationToken cancellationToken)
+        public async Task<GetAllCargosQueryResponse> Handle(GetAllCargosQuery request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Tum kargolar listeleniyor. Filtreler: Status={Status}, TrackingNumber={TrackingNumber}, Email={Email}, Page={Page}",
                 request.Status, request.TrackingNumber, request.ReceiverEmail, request.EffectivePageIndex);
 
-            var (filterParams, useKeyset, pageIndex, pageSize, runCountQuery, fetchOneMore) = CargoFilterSpecification.FromGetAllCargosQuery(request);
+            var (filterParams, pageIndex, pageSize, runCountQuery, fetchOneMore) = CargoFilterSpecification.FromGetAllCargosQuery(request);
             var spec = new CargoFilterSpecification(filterParams);
 
             var totalCount = -1;
@@ -45,49 +45,36 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetAll
             if (cargos == null || !cargos.Any())
             {
                 _logger.LogWarning("Hic kargo bulunamadi.");
-                return new GetAllCargosQueryResult
+                return new GetAllCargosQueryResponse
                 {
-                    Items = new List<GetAllCargosQueryResponse>(),
+                    Items = new List<GetAllCargosQueryItem>(),
                     TotalCount = runCountQuery ? 0 : -1,
-                    PageIndex = useKeyset ? 1 : pageIndex,
+                    PageIndex = pageIndex,
                     PageSize = pageSize,
-                    HasMore = false,
-                    NextCursorCreatedDate = null,
-                    NextCursorId = null
+                    HasMore = false
                 };
             }
 
             bool hasMore = false;
-            if ((useKeyset || fetchOneMore) && cargos.Count > pageSize)
+            if (fetchOneMore && cargos.Count > pageSize)
             {
                 hasMore = true;
                 cargos = cargos.Take(pageSize).ToList();
             }
-            else if (!useKeyset && totalCount >= 0)
+            else if (totalCount >= 0)
             {
                 hasMore = (pageIndex * pageSize) < totalCount;
             }
 
-            var response = cargos.Select(c => c.ToGetAllCargosQueryResponse()).ToList();
+            var response = cargos.Select(c => CargoMapping.ToGetAllCargosQueryItem(c)).ToList();
 
-            DateTime? nextCursorCreatedDate = null;
-            string? nextCursorId = null;
-            if (useKeyset && response.Count > 0)
-            {
-                var last = response[^1];
-                nextCursorCreatedDate = last.CreatedDate;
-                nextCursorId = last.Id;
-            }
-
-            return new GetAllCargosQueryResult
+            return new GetAllCargosQueryResponse
             {
                 Items = response,
                 TotalCount = runCountQuery ? totalCount : -1,
-                PageIndex = useKeyset ? 1 : pageIndex,
+                PageIndex = pageIndex,
                 PageSize = pageSize,
-                HasMore = hasMore,
-                NextCursorCreatedDate = nextCursorCreatedDate,
-                NextCursorId = nextCursorId
+                HasMore = hasMore
             };
         }
     }

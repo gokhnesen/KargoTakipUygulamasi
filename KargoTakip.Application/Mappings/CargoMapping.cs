@@ -10,9 +10,9 @@ namespace KargoTakip.Application.Mappings
     {
         private const string UnknownDisplay = "Bilinmiyor";
 
-        public static GetAllCargosQueryResponse ToGetAllCargosQueryResponse(this Cargo c)
+        public static GetAllCargosQueryItem ToGetAllCargosQueryItem(this Cargo c)
         {
-            return new GetAllCargosQueryResponse
+            return new GetAllCargosQueryItem
             {
                 Id = c.Id,
                 TrackingNumber = c.TrackingNumber,

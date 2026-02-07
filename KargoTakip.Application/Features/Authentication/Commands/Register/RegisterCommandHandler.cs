@@ -1,4 +1,5 @@
 using KargoTakip.Application.Exceptions;
+using KargoTakip.Application.Helpers.Email;
 using KargoTakip.Application.Interfaces.Notification;
 using KargoTakip.Application.Messages;
 using KargoTakip.Domain.Entities;
@@ -80,14 +81,15 @@ namespace KargoTakip.Application.Features.Authentication.Commands.Register
             var clientBaseUrl = _configuration["App:ClientBaseUrl"]?.TrimEnd('/') ?? "https://localhost:4200";
             var confirmUrl = $"{clientBaseUrl}/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
 
-            var subject = "E-posta Adresinizi Onaylayin - KargoTakip";
-            var htmlBody = $@"
-                <h2>Hos geldiniz</h2>
-                <p>KargoTakip hesabinizi olusturdunuz. Asagidaki linke tiklayarak e-posta adresinizi onaylayin:</p>
-                <p><a href=""{confirmUrl}"" style=""display:inline-block; padding:10px 20px; background:#667eea; color:#fff; text-decoration:none; border-radius:8px;"">E-postami Onayla</a></p>
-                <p>Linke tiklayamazsaniz asagidaki adresi tarayiciniza kopyalayin:</p>
-                <p style=""word-break:break-all; color:#666;"">{confirmUrl}</p>
-                <p>Bu e-postayi siz talep etmediyseniz lutfen dikkate almayin.</p>";
+            var subject = $"E-posta adresinizi onaylayın - {EmailTemplateBuilder.CompanyName}";
+            var innerHtml = $@"
+                <h2 style=""margin:0 0 16px; font-size:18px; color:#111827;"">Hoş geldiniz</h2>
+                <p style=""margin:0 0 12px;"">{EmailTemplateBuilder.CompanyName} hesabınızı oluşturdunuz. Aşağıdaki linke tıklayarak e-posta adresinizi onaylayın:</p>
+                <p style=""margin:0 0 16px;""><a href=""{confirmUrl}"" style=""display:inline-block; padding:12px 24px; background:#E85D04; color:#fff; text-decoration:none; border-radius:8px; font-weight:600;"">E-postamı onayla</a></p>
+                <p style=""margin:0 0 8px;"">Linke tıklayamazsanız aşağıdaki adresi tarayıcınıza kopyalayın:</p>
+                <p style=""word-break:break-all; color:#6B7280; font-size:13px; margin:0 0 12px;"">{confirmUrl}</p>
+                <p style=""margin:0;"">Bu e-postayı siz talep etmediyseniz lütfen dikkate almayın.</p>";
+            var htmlBody = EmailTemplateBuilder.WrapWithBranding(innerHtml);
             var plainBody = $"E-posta adresinizi onaylamak icin asagidaki linke tiklayin: {confirmUrl}";
 
             await _emailQueue.PublishAsync(new SendEmailMessage
