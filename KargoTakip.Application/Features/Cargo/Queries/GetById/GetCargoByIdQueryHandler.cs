@@ -1,5 +1,6 @@
 using KargoTakip.Application.Dtos;
 using KargoTakip.Application.Exceptions;
+using KargoTakip.Application.Mappings;
 using KargoTakip.Application.Interfaces;
 using KargoTakip.Application.Interfaces.Cargo;
 using MediatR;
@@ -53,14 +54,7 @@ namespace KargoTakip.Application.Features.Cargo.Queries.GetById
                 Status = cargo.Status,
                 CreatedDate = cargo.CreatedDate,
                 UpdatedDate = cargo.UpdatedDate,
-                Movements = cargo.Movements?.OrderByDescending(m => m.CreatedDate).Select(m => new CargoMovementDto
-                {
-                    Id = m.Id,
-                    NewStatus = m.NewStatus,
-                    Location = m.Location,
-                    Description = m.Description,
-                    CreatedDate = m.CreatedDate
-                }).ToList() ?? new List<CargoMovementDto>()
+                Movements = cargo.Movements?.OrderByDescending(m => m.CreatedDate).Select(m => m.ToCargoMovementDto()).ToList() ?? new List<CargoMovementDto>()
             };
         }
     }

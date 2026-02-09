@@ -41,7 +41,7 @@ namespace KargoTakip.API.Controllers
             await _seeder.SeedAsync(totalCargos, movementsPerCargo);
             return Ok(new
             {
-                message = $"? Successfully seeded {totalCargos:N0} cargos with {movementsPerCargo} movements each",
+                message = $"Successfully seeded {totalCargos:N0} cargos with {movementsPerCargo} movements each",
                 totalCargos,
                 movementsPerCargo
             });
@@ -56,7 +56,7 @@ namespace KargoTakip.API.Controllers
             }
 
             await _seeder.ClearAllCargoDataAsync();
-            return Ok(new { message = "? All cargo data cleared successfully" });
+            return Ok(new { message = "All cargo data cleared successfully" });
         }
 
         [HttpGet("stats")]

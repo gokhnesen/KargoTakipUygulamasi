@@ -5,7 +5,6 @@ using KargoTakip.Application;
 using KargoTakip.Application.Interfaces;
 using KargoTakip.Infrastructure;
 using KargoTakip.Persistence;
-using KargoTakip.Persistence.Utilities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
